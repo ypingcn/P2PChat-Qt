@@ -400,13 +400,12 @@ void MainWindow::continueToSend(qint64 size)
     {
         showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
 
-        ui->ProgressBar->hide();
-
         sendSocket->disconnectFromHost();
         sendSocket->close();
         sendTimes = 0;
-        sendFileLeftSize  = sendFileTotalSize ;
 
+        ui->ProgressBar->hide();
+        sendFileLeftSize  = sendFileTotalSize ;
     }
 }
 

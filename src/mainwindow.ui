@@ -206,7 +206,7 @@
       <height>25</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="messageSentLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="spacerSend">
        <property name="orientation">
@@ -271,7 +271,7 @@
       <height>25</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="fileServerLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QPushButton" name="btnListen">
        <property name="text">

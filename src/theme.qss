@@ -1,0 +1,30 @@
+QMainWindow{
+       background: rgb(248, 248, 255);
+       border: none;
+}
+
+QLineEdit,QTextBrowser,QTextEdit,QListWidget{
+        border-radius: 4px;
+        height: 25px;
+        border: 1px solid rgb(111, 156, 207);
+        background: white;
+}
+
+QComboBox {
+        height: 25px;
+        width: 70px;
+        border-radius: 4px;
+        border: 1px solid rgb(111, 156, 207);
+        background: white;
+}
+
+QPushButton {
+        color: white;
+        border: none;
+        background: rgb(111, 156, 207);
+        height: 25px;
+        min-width: 70px;
+        border-radius: 4px;
+        padding-left: 5px;
+        padding-right: 5px;
+}

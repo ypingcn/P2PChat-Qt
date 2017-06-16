@@ -5,8 +5,6 @@
 #include <QJsonDocument>
 #include <QDateTime>
 #include <QMessageBox>
-#include <QRegExp>
-#include <QNetworkInterface>
 #include <QFileDialog>
 #include <QDesktopServices>
 
@@ -18,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->ProgressBar->hide();
 
-    ui->labIPAdress->setText(getLocalIP());
+    ui->labIPAdress->setText(Tools::getLocalIP());
     ui->edtFinalIP->setText("127.0.0.2");
     ui->edtFinalPort->setText(QString::number(FILE_PORT));
 
@@ -77,43 +75,6 @@ void MainWindow::showMessage(MessageType type, QString hint, QString content)
     }
 }
 
-QString MainWindow::toIPv4(quint32 arg)
-{
-    QString res;
-    int bits[4],cnt = 0;
-    while (arg)
-    {
-        bits[cnt] = arg % 256;
-        arg /= 256;
-        cnt++;
-    }
-    for(int i=3;i>=0;i--)
-        res.append(QString::number(bits[i]).append(i==0?"":"."));
-    return res;
-}
-
-QString MainWindow::getLocalIP()
-{
-    QList<QHostAddress> list = QNetworkInterface::allAddresses();
-    foreach(QHostAddress in,list)
-    {
-        if(in.protocol() == QAbstractSocket::IPv4Protocol && in.toString().contains("192.168"))
-            return in.toString();
-    }
-    return QString::null;
-}
-
-bool MainWindow::vaildNickName(QString name)
-{
-    QRegExp reg1("[A-Za-z0-9_]{1,}");
-    QRegExp reg2("[\u4E00-\u9FA5]{1,}");
-    if(reg1.exactMatch(name))
-        return true;
-    if(reg2.exactMatch(name))
-        return true;
-    return false;
-}
-
 void MainWindow::sendJson(MessageType type, QString nick_name, QString content)
 {
     QJsonObject obj;
@@ -161,7 +122,7 @@ void MainWindow::readAllMessage()
             if(obj.contains("type") && obj.contains("nick-name"))
             {
                 QJsonValue type = obj.take("type");
-                QString info = obj.take("nick-name").toString() + "(" + toIPv4(source.toIPv4Address()) + ")" ;
+                QString info = obj.take("nick-name").toString() + "(" + Tools::toIPv4(source.toIPv4Address()) + ")" ;
                 if(type.toString() == "chat" && obj.contains("content"))
                 {
                     showMessage(Chat,info,obj.take("content").toString());
@@ -212,7 +173,7 @@ void MainWindow::sendLoginMessage()
 {
     if(!ui->edtName->isEnabled())
         QMessageBox::information(this,tr("Have logined!"),tr("Have logined!"),QMessageBox::Yes);
-    else if(!vaildNickName(ui->edtName->text()))
+    else if(!Tools::vaildNickName(ui->edtName->text()))
         QMessageBox::information(this,tr("Invaild Nickname!"),tr("Invaild Nickname!"),QMessageBox::Yes);
     else
     {

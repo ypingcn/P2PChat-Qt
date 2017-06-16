@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "tools.h"
+
 #include <QMainWindow>
 #include <QUdpSocket>
 #include <QTcpSocket>
@@ -25,14 +27,10 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    /* --- Tools --- */
-    QString toIPv4(quint32 arg);
-    QString getLocalIP();
-    bool vaildNickName(QString name);
-    void showMessage(MessageType type,QString hint,QString content);
-
     /* --- UDP --- */
     void sendJson(MessageType type,QString nick_name,QString content = "");
+    /* --- Tools ---*/
+    void showMessage(MessageType type,QString hint,QString content);
 
 private:
     Ui::MainWindow *ui;

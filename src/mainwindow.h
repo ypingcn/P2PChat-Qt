@@ -73,7 +73,6 @@ private slots:
     void chooseSendFile();
     void listen();
     void acceptConnection();
-    void stopToRecvFile();
     void readConnection();
     void sendConnection();
     void sendFileInfo();

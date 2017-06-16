@@ -23,10 +23,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->edtFinalPort->setText(QString::number(FILE_PORT));
 
     ui->btnSendFile->setEnabled(false);
-    ui->btnStop->setEnabled(false);
     ui->edtMessage->setEnabled(false);
     ui->btnSendMessage->setEnabled(false);
-    ui->btnStop->hide();
 
     state = NoState;
     sendTimes = 0;
@@ -288,13 +286,6 @@ void MainWindow::acceptConnection()
     connect(receiveSocket,SIGNAL(readyRead()),this,SLOT(readConnection()));
 
     ui->ProgressBar->show();
-    ui->btnStop->setEnabled(true);
-    connect(ui->btnStop,SIGNAL(clicked(bool)),this,SLOT(stopToRecvFile()));
-}
-
-void MainWindow::stopToRecvFile()
-{
-    receiveSocket->close();
 }
 
 void MainWindow::readConnection()

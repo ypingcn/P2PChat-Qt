@@ -154,18 +154,11 @@
       <height>31</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="fileLayout">
+    <layout class="QHBoxLayout" name="sendFileLayout">
      <item>
       <widget class="QPushButton" name="btnSendFile">
        <property name="text">
         <string>Send</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnStop">
-       <property name="text">
-        <string>Stop</string>
        </property>
       </widget>
      </item>
@@ -206,7 +199,7 @@
       <height>25</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="messageSendLayout">
      <item>
       <spacer name="spacerSend">
        <property name="orientation">
@@ -238,7 +231,7 @@
       <height>22</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="loginTypeLayout">
      <item>
       <widget class="QLabel" name="labMask">
        <property name="text">
@@ -271,7 +264,7 @@
       <height>25</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="actionLayout_3">
      <item>
       <widget class="QPushButton" name="btnListen">
        <property name="text">

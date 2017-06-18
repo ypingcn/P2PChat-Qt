@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=0.1
+Type=Application
+Exec=/usr/bin/p2pchat-qt
+Name[zh_CN]=局域网聊天
+Comment[zh_CN]=局域网聊天
+Name=p2pchat-qt
+Comment=局域网聊天
+Icon=p2pchat-qt
+Categories=Education;Chat;QT;

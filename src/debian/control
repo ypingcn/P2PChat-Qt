@@ -1,0 +1,13 @@
+Source: p2pchat-qt
+Section: utils
+Priority: optional
+Maintainer: ypingcn <1344632698@qq.com>
+Build-Depends: debhelper (>=9), qt5-qmake, qt5-default, qtbase5-dev, libqt5svg5-dev
+Standards-Version: 3.9.6
+Homepage: https://github.com/ypingcn/P2PChat-Qt
+
+Package: p2pchat-qt
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: P2PChat-Qt
+  A simple Qt-based demo for LAN (Local Area Network) chat.

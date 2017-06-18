@@ -8,8 +8,11 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = p2p
+TARGET = p2pchat-qt
 TEMPLATE = app
+
+DEPENDPATH += .
+INCLUDEPATH += .
 
 RC_FILE += resources/icons/main.rc
 TRANSLATIONS += zh-cn.ts
@@ -36,3 +39,24 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     resources/resource.qrc
+
+DISTFILES +=
+
+icons.files = resources/p2pchat-qt.png
+desktop.files = p2pchat-qt.desktop
+
+isEmpty(INSTALL_PREFIX) {
+    unix: INSTALL_PREFIX = /usr
+    else: INSTALL_PREFIX = ..
+}
+
+unix: {
+    desktop.path = $$INSTALL_PREFIX/share/applications
+    icons.path = $$INSTALL_PREFIX/share/icons/hicolor/128x128/apps
+    INSTALLS += desktop icons
+ }
+
+targer.files = p2pchat-qt
+target.path = $$INSTALL_PREFIX/bin
+
+INSTALLS += target

@@ -20,29 +20,30 @@ class MainWindow : public QMainWindow
     /* --- Message Type for showMessage() --- */
     enum MessageType{Chat,Login,Logout,Online,System};
 
-    /* --- Program State for fileServer --- */
-    enum CurrentState{SendFile,ReceiveFile,NoState};
-
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    /* --- UDP --- */
-    void sendJson(MessageType type,QString nick_name,QString content = "");
-    /* --- Tools ---*/
-    void showMessage(MessageType type,QString hint,QString content);
-
 private:
     Ui::MainWindow *ui;
 
+    /* --- Tools ---*/
+    void sendJson(MessageType type,QString nick_name,QString content = "");
+    void showMessage(MessageType type,QString hint,QString content);
+    bool localUserStatus();
+    void setLocalUserStatus(bool status);
+    bool localFileStatus();
+    void setLocalFileStatus(bool status);
+
     /* --- UDP --- */
     const qint16 DEFAULT_MESSAGE_PORT = 6108;
+    const qint8 DEFAULT_MESSAGE_FONT_SIZE = 14;
     QUdpSocket * messageSender,* messageReader;
     /* --- TCP --- */
-    quint16 FILE_PORT = 6109;
+    const QString DEFAULT_FILE_IP = "127.0.0.1";
+    const quint16 DEFAULT_FILE_PORT = 6109;
 
     QTcpServer * fileServer;
-    CurrentState state;
 
     /* --- File Send --- */
     qint8 sendTimes;

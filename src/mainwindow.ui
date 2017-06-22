@@ -157,6 +157,9 @@
     <layout class="QHBoxLayout" name="sendFileLayout">
      <item>
       <widget class="QPushButton" name="btnSendFile">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Send</string>
        </property>

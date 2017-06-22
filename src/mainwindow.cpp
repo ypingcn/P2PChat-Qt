@@ -17,17 +17,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ProgressBar->hide();
 
     ui->labIPAdress->setText(Tools::getLocalIP());
-    ui->edtFinalIP->setText("127.0.0.2");
-    ui->edtFinalPort->setText(QString::number(FILE_PORT));
+    ui->edtFinalIP->setText(DEFAULT_FILE_IP);
+    ui->edtFinalPort->setText(QString::number(DEFAULT_FILE_PORT));
 
-    ui->btnSendFile->setEnabled(false);
-    ui->edtMessage->setEnabled(false);
-    ui->btnSendMessage->setEnabled(false);
+    setLocalUserStatus(false);
+    setLocalFileStatus(false);
 
-    state = NoState;
     sendTimes = 0;
+
     QFont font;
-    font.setPixelSize(14);
+    font.setPixelSize(DEFAULT_MESSAGE_FONT_SIZE);
     ui->browserMessage->setFont(font);
 
     messageSender = new QUdpSocket();
@@ -73,6 +72,37 @@ void MainWindow::showMessage(MessageType type, QString hint, QString content)
         ui->browserMessage->setTextColor(QColor(0,0,0));
         ui->browserMessage->append(content);
     }
+}
+
+bool MainWindow::localUserStatus()
+{
+    if(ui->edtName->isEnabled())
+        return true;
+    return false;
+}
+
+void MainWindow::setLocalUserStatus(bool status)
+{
+    ui->edtName->setEnabled(!status);
+    ui->edtMessage->setEnabled(status);
+    ui->btnSendMessage->setEnabled(status);
+    ui->btnLogin->setEnabled(!status);
+    ui->btnLogout->setEnabled(status);
+}
+
+bool MainWindow::localFileStatus()
+{
+    if(ui->btnListen->isEnabled())
+        return true;
+    return false;
+}
+
+void MainWindow::setLocalFileStatus(bool status)
+{
+    ui->edtFinalIP->setEnabled(status);
+    ui->edtFinalPort->setEnabled(status);
+    ui->btnChooseFile->setEnabled(status);
+    ui->btnListen->setEnabled(status);
 }
 
 void MainWindow::sendJson(MessageType type, QString nick_name, QString content)
@@ -171,31 +201,21 @@ void MainWindow::sendChatMessage()
 
 void MainWindow::sendLoginMessage()
 {
-    if(!ui->edtName->isEnabled())
-        QMessageBox::information(this,tr("Have logined!"),tr("Have logined!"),QMessageBox::Yes);
-    else if(!Tools::vaildNickName(ui->edtName->text()))
+    if(!Tools::vaildNickName(ui->edtName->text()))
         QMessageBox::information(this,tr("Invaild Nickname!"),tr("Invaild Nickname!"),QMessageBox::Yes);
     else
     {
-        ui->edtName->setEnabled(false);
-        ui->edtMessage->setEnabled(true);
-        ui->btnSendMessage->setEnabled(true);
+        setLocalUserStatus(true);
+        setLocalFileStatus(true);
         sendJson(Login,ui->edtName->text());
     }
 }
 
 void MainWindow::sendLogoutMessage()
 {
-    if(ui->edtName->isEnabled())
-        QMessageBox::information(this,tr("Have not logined!"),tr("Have not logined!"),QMessageBox::Yes);
-    else
-    {
-        ui->edtName->setEnabled(true);
-        ui->edtMessage->setEnabled(false);
-        ui->btnSendMessage->setEnabled(false);
-        sendJson(Logout,ui->edtName->text());
-    }
-
+    setLocalUserStatus(false);
+    setLocalFileStatus(false);
+    sendJson(Logout,ui->edtName->text());
 }
 
 void MainWindow::chooseSendFile()
@@ -215,26 +235,19 @@ void MainWindow::chooseSendFile()
 
 void MainWindow::listen()
 {
-    if(ui->edtName->isEnabled())
-        QMessageBox::information(this,tr("Have logined!"),tr("Login to continue"),QMessageBox::Yes);
-    else if(state == NoState)
+    if(!localFileStatus())
     {
-        ui->edtFinalIP->setEnabled(false);
-        ui->edtFinalPort->setEnabled(false);
-        ui->btnSendFile->setEnabled(false);
-        ui->btnListen->setText(tr("UnListen"));
+        setLocalFileStatus(true);
+        ui->btnListen->setText(tr("Listen"));
         fileServer->listen(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
         showMessage(System,tr("System"),tr(" -- File Port Listening"));
-        state = ReceiveFile;
     }
-    else if(state == ReceiveFile)
+    else
     {
-        ui->edtFinalIP->setEnabled(true);
-        ui->edtFinalPort->setEnabled(true);
-        ui->btnListen->setText(tr("Listen"));
+        setLocalFileStatus(false);
+        ui->btnListen->setText(tr("UnListen"));
         fileServer->close();
         showMessage(System,tr("System"),tr(" -- File Port Listening Closed"));
-        state = NoState;
     }
 }
 

@@ -90,19 +90,14 @@ void MainWindow::setLocalUserStatus(bool status)
     ui->btnLogout->setEnabled(status);
 }
 
-bool MainWindow::localFileStatus()
-{
-    if(ui->btnListen->isEnabled())
-        return true;
-    return false;
-}
-
 void MainWindow::setLocalFileStatus(bool status)
 {
     ui->edtFinalIP->setEnabled(status);
     ui->edtFinalPort->setEnabled(status);
     ui->btnChooseFile->setEnabled(status);
     ui->btnListen->setEnabled(status);
+    listenType = Unlisten;
+    ui->btnListen->setText(tr("Listen"));
 }
 
 void MainWindow::sendJson(MessageType type, QString nick_name, QString content)
@@ -207,6 +202,7 @@ void MainWindow::sendLoginMessage()
     {
         setLocalUserStatus(true);
         setLocalFileStatus(true);
+        ui->btnListen->setEnabled(true);
         sendJson(Login,ui->edtName->text());
     }
 }
@@ -235,17 +231,17 @@ void MainWindow::chooseSendFile()
 
 void MainWindow::listen()
 {
-    if(!localFileStatus())
+    if(listenType == Unlisten)
     {
-        setLocalFileStatus(true);
-        ui->btnListen->setText(tr("Listen"));
+        ui->btnListen->setText(tr("UnListen"));
+        listenType = Listen;
         fileServer->listen(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
         showMessage(System,tr("System"),tr(" -- File Port Listening"));
     }
-    else
+    else if(listenType == Listen)
     {
-        setLocalFileStatus(false);
-        ui->btnListen->setText(tr("UnListen"));
+        ui->btnListen->setText(tr("Listen"));
+        listenType = Unlisten;
         fileServer->close();
         showMessage(System,tr("System"),tr(" -- File Port Listening Closed"));
     }

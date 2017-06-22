@@ -19,6 +19,8 @@ class MainWindow : public QMainWindow
 
     /* --- Message Type for showMessage() --- */
     enum MessageType{Chat,Login,Logout,Online,System};
+    /* --- Local Listen Type --- */
+    enum ListenType{Listen,Unlisten};
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -32,7 +34,6 @@ private:
     void showMessage(MessageType type,QString hint,QString content);
     bool localUserStatus();
     void setLocalUserStatus(bool status);
-    bool localFileStatus();
     void setLocalFileStatus(bool status);
 
     /* --- UDP --- */
@@ -59,6 +60,7 @@ private:
     QString receiveFileName;
     qint64 receiveFileTotalSize,receiveFileTransSize;
     QByteArray receiveFileBlock;
+    ListenType listenType;
 
 private slots:
 

@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/">
         <file>theme/default.qss</file>
+        <file>icons/send.png</file>
+        <file>icons/choose-file.png</file>
+        <file>icons/login.png</file>
+        <file>icons/logout.png</file>
+        <file>icons/message.png</file>
+        <file>icons/listen.png</file>
     </qresource>
 </RCC>

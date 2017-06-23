@@ -36,8 +36,8 @@ QString Tools::getLocalIP()
 
 bool Tools::vaildNickName(QString name)
 {
-    QRegExp reg1("[A-Za-z0-9_]{1,}");
-    QRegExp reg2("[\u4E00-\u9FA5]{1,}");
+    QRegExp reg1("[A-Za-z0-9_]{1,}");  // 至少有一个大小写字母/数字/下划线
+    QRegExp reg2("[\u4E00-\u9FA5]{1,}");// 至少有一个中文字符
     if(reg1.exactMatch(name))
         return true;
     if(reg2.exactMatch(name))

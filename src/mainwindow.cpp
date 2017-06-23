@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    sendJson(Logout,ui->edtName->text());
+    sendJson(Logout,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
 }
 
@@ -76,13 +76,14 @@ void MainWindow::showMessage(MessageType type, QString hint, QString content)
 
 bool MainWindow::localUserStatus()
 {
-    if(ui->edtName->isEnabled())
-        return true;
-    return false;
+    if(ui->edtName->isEnabled()) // 根据昵称输入框判断本地用户在线情况
+        return false;
+    return true;
 }
 
 void MainWindow::setLocalUserStatus(bool status)
 {
+    /* --- 根据用户状态设置按钮可用性 ---*/
     ui->edtName->setEnabled(!status);
     ui->edtMessage->setEnabled(status);
     ui->btnSendMessage->setEnabled(status);
@@ -92,6 +93,7 @@ void MainWindow::setLocalUserStatus(bool status)
 
 void MainWindow::setLocalFileStatus(bool status)
 {
+    /* --- 根据文件传输可用性设置按钮可用性以及监听状态 ---*/
     ui->edtFinalIP->setEnabled(status);
     ui->edtFinalPort->setEnabled(status);
     ui->btnChooseFile->setEnabled(status);
@@ -117,12 +119,12 @@ void MainWindow::sendJson(MessageType type, QString nick_name, QString content)
         obj.insert("type","online");
 
 
-    if(content != "")
+    if(content != "") // content 默认为空
         obj.insert("content",content);
 
     obj.insert("nick-name",nick_name);
 
-    QJsonDocument doc;
+    QJsonDocument doc; // json 格式封装将要发送到聊天室内的信息
     doc.setObject(obj);
 
     QByteArray data = doc.toJson();
@@ -136,7 +138,7 @@ void MainWindow::readAllMessage()
     {
         QByteArray data;
         data.resize(messageReader->pendingDatagramSize());
-        QHostAddress source;
+        QHostAddress source; // 信息来源IP
         messageReader->readDatagram(data.data(),data.size(),&source);
 
         QJsonParseError jsonError;
@@ -146,7 +148,7 @@ void MainWindow::readAllMessage()
             QJsonObject obj = doc.object();
             if(obj.contains("type") && obj.contains("nick-name"))
             {
-                QJsonValue type = obj.take("type");
+                QJsonValue type = obj.take("type"); // 信息类型
                 QString info = obj.take("nick-name").toString() + "(" + Tools::toIPv4(source.toIPv4Address()) + ")" ;
                 if(type.toString() == "chat" && obj.contains("content"))
                 {
@@ -154,15 +156,17 @@ void MainWindow::readAllMessage()
                 }
                 else if(type.toString() == "login")
                 {
+                    /* --- 查找同名、同IP的用户信息 不存在则添加--- */
                     QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
                     if(user.size() == 0)
                         ui->listOnlineUser->insertItem(ui->listOnlineUser->count()+1,info);
                     showMessage(Login,info,tr(" -- enter the chat room"));
-                    if(!ui->edtName->isEnabled())
+                    if(localUserStatus()) // 本地用户在线则向聊天室发送 Online 信息，交换在线用户信息
                         sendJson(Online,ui->edtName->text());
                 }
                 else if(type.toString() == "logout")
                 {
+                    /* --- 查找退出用户信息并从列表删除 --- */
                     QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
                     for(auto it = user.begin();it!=user.end();it++)
                     {
@@ -173,6 +177,7 @@ void MainWindow::readAllMessage()
                 }
                 else if(type.toString() == "online")
                 {
+                    /* --- 更新在线用户信息 --- */
                     QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
                     if(user.size() == 0)
                         ui->listOnlineUser->insertItem(ui->listOnlineUser->count()+1,info);
@@ -255,7 +260,7 @@ void MainWindow::acceptConnection()
     receiveSocket = fileServer->nextPendingConnection();
     connect(receiveSocket,SIGNAL(readyRead()),this,SLOT(readConnection()));
 
-    ui->ProgressBar->show();
+    ui->ProgressBar->show(); // 显示文件传输进度条
 }
 
 void MainWindow::readConnection()
@@ -267,7 +272,7 @@ void MainWindow::readConnection()
 
         ui->ProgressBar->setMaximum(receiveFileTotalSize);
 
-        receiveFile = new QFile("D:\\"+receiveFileName);
+        receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
         receiveFile->open(QFile::ReadWrite);
 
         showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
@@ -277,13 +282,13 @@ void MainWindow::readConnection()
         receiveFileBlock = receiveSocket->readAll();
         receiveFileTransSize += receiveFileBlock.size();
 
-        ui->ProgressBar->setValue(receiveFileTransSize);
+        ui->ProgressBar->setValue(receiveFileTransSize); // 更新进度条
 
         receiveFile->write(receiveFileBlock);
         receiveFile->flush();
     }
 
-    if(receiveFileTransSize == receiveFileTotalSize)
+    if(receiveFileTransSize == receiveFileTotalSize) // 文件传输完成
     {
         showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
 
@@ -291,8 +296,8 @@ void MainWindow::readConnection()
         choice = QMessageBox::information(this,tr("Open File Folder?"),tr("Open File Folder?"),QMessageBox::Yes,QMessageBox::No);
         if(choice == QMessageBox::Yes)
         {
-            QDir dir("D://");
-            QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode));
+            QDir dir(DEFAULT_FILE_STORE);
+            QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
         }
         receiveFileTotalSize = receiveFileTransSize = 0;
         receiveFileName = QString::null;
@@ -306,8 +311,8 @@ void MainWindow::sendConnection()
     if(sendTimes == 0)
     {
         sendSocket->connectToHost(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
-        if(!sendSocket->waitForConnected(100))
-            QMessageBox::information(this,tr("ERROR"),tr("network error"),QMessageBox::Yes);
+        if(!sendSocket->waitForConnected(100)) // 检测网络情况
+            QMessageBox::information(this,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
         else
             sendTimes = 1;
     }
@@ -332,8 +337,8 @@ void MainWindow::sendFileInfo()
     sendSocket->write(sendFileBlock);
 
     ui->ProgressBar->setMaximum(sendFileTotalSize);
-    ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
-    ui->ProgressBar->show();
+    ui->ProgressBar->setValue(0); // 更新进度条数值
+    ui->ProgressBar->show(); // 显示进度条
 
     showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
 
@@ -342,9 +347,9 @@ void MainWindow::sendFileInfo()
 
 void MainWindow::continueToSend(qint64 size)
 {
-    if(sendSocket->state() != QAbstractSocket::ConnectedState)
+    if(sendSocket->state() != QAbstractSocket::ConnectedState) // 网络出错
     {
-        QMessageBox::information(this,tr("error"),tr("error"),QMessageBox::Yes);
+        QMessageBox::information(this,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
         ui->ProgressBar->hide();
         return;
     }
@@ -357,7 +362,7 @@ void MainWindow::continueToSend(qint64 size)
 
     ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
 
-    if(sendFileLeftSize == 0)
+    if(sendFileLeftSize == 0) // 文件发送完成
     {
         showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
 

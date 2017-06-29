@@ -40,14 +40,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(sendChatMessage()));
     connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(chooseSendFile()));
 
+    connect(ui->btnListen,SIGNAL(clicked(bool)),this,SLOT(listen()));
+    connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(sendConnection()));
+
     fileServer = new QTcpServer();
     connect(fileServer,SIGNAL(newConnection()),this,SLOT(acceptConnection()));
 
     sendSocket = new QTcpSocket();
     connect(sendSocket,SIGNAL(connected()),this,SLOT(sendFileInfo()));
+    connect(sendSocket,SIGNAL(bytesWritten(qint64)),this,SLOT(continueToSend(qint64)));
 
-    connect(ui->btnListen,SIGNAL(clicked(bool)),this,SLOT(listen()));
-    connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(sendConnection()));
+
 }
 
 MainWindow::~MainWindow()
@@ -229,7 +232,7 @@ void MainWindow::chooseSendFile()
         sendFile->open(QIODevice::ReadOnly);
         sendFileName = name.right(name.size()-name.lastIndexOf('/')-1);
         showMessage(System,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
-        sendFileTotalSize = sendFileLeftSize = 0;
+        sendTimes = 0;
         sendFileBlock.clear();
     }
 }
@@ -272,7 +275,18 @@ void MainWindow::readConnection()
 
         ui->ProgressBar->setMaximum(receiveFileTotalSize);
 
-        receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
+        if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
+        {
+            int id = 1;
+            while(QFile::exists(DEFAULT_FILE_STORE+"("+QString::number(id)+")"+receiveFileName))
+                id++;
+            receiveFile = new QFile(DEFAULT_FILE_STORE+"("+QString::number(id)+")"+receiveFileName);
+        }
+        else
+        {
+            receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
+        }
+
         receiveFile->open(QFile::ReadWrite);
 
         showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
@@ -311,7 +325,7 @@ void MainWindow::sendConnection()
     if(sendTimes == 0)
     {
         sendSocket->connectToHost(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
-        if(!sendSocket->waitForConnected(100)) // 检测网络情况
+        if(!sendSocket->waitForConnected(2000)) // 检测网络情况
             QMessageBox::information(this,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
         else
             sendTimes = 1;
@@ -323,13 +337,13 @@ void MainWindow::sendConnection()
 
 void MainWindow::sendFileInfo()
 {
-    sendFileEachTransSize = 4 * 1024;
+    sendFileEachTransSize = 40 * 1024;
 
     QDataStream out(&sendFileBlock,QIODevice::WriteOnly);
     out<<qint64(0)<<qint64(0)<<sendFileName;
 
-    sendFileTotalSize += sendFile->size() + sendFileBlock.size();
-    sendFileLeftSize += sendFile->size() + sendFileBlock.size();
+    sendFileTotalSize = sendFile->size() + sendFileBlock.size();
+    sendFileLeftSize = sendFile->size() + sendFileBlock.size();
 
     out.device()->seek(0);
     out<<sendFileTotalSize<<qint64(sendFileBlock.size());
@@ -341,8 +355,6 @@ void MainWindow::sendFileInfo()
     ui->ProgressBar->show(); // 显示进度条
 
     showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
-
-    connect(sendSocket,SIGNAL(bytesWritten(qint64)),this,SLOT(continueToSend(qint64)));
 }
 
 void MainWindow::continueToSend(qint64 size)
@@ -356,22 +368,21 @@ void MainWindow::continueToSend(qint64 size)
 
     sendFileLeftSize -= size;
 
-    sendFileBlock = sendFile->read( qMin(sendFileLeftSize,sendFileEachTransSize) );
-
-    sendSocket->write(sendFileBlock);
-
-    ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
-
     if(sendFileLeftSize == 0) // 文件发送完成
     {
         showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
 
         sendSocket->disconnectFromHost();
-        sendSocket->close();
-        sendTimes = 0;
 
         ui->ProgressBar->hide();
-        sendFileLeftSize  = sendFileTotalSize ;
+    }
+    else
+    {
+        sendFileBlock = sendFile->read( qMin(sendFileLeftSize,sendFileEachTransSize) );
+
+        sendSocket->write(sendFileBlock);
+
+        ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
     }
 }
 

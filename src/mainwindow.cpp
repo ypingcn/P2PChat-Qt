@@ -275,16 +275,34 @@ void MainWindow::readConnection()
 
         ui->ProgressBar->setMaximum(receiveFileTotalSize);
 
-        if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
+        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf(".")-1-1);
+        QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
+
+        if( QSysInfo::kernelType() == "linux" )
         {
-            int id = 1;
-            while(QFile::exists(DEFAULT_FILE_STORE+"("+QString::number(id)+")"+receiveFileName))
-                id++;
-            receiveFile = new QFile(DEFAULT_FILE_STORE+"("+QString::number(id)+")"+receiveFileName);
+            if(QFile::exists(receiveFileName))
+            {
+                int id = 1;
+                while( QFile::exists( name + "(" + QString::number(id) + ")" + suffix ) )
+                    id++;
+                receiveFile = new QFile( name + "(" + QString::number(id) + ")" + suffix );
+            }
+            else
+                receiveFile = new QFile(receiveFileName);
         }
         else
         {
-            receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
+            if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
+            {
+                int id = 1;
+                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix) )
+                    id++;
+                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix);
+            }
+            else
+            {
+                receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
+            }
         }
 
         receiveFile->open(QFile::ReadWrite);
@@ -310,8 +328,16 @@ void MainWindow::readConnection()
         choice = QMessageBox::information(this,tr("Open File Folder?"),tr("Open File Folder?"),QMessageBox::Yes,QMessageBox::No);
         if(choice == QMessageBox::Yes)
         {
-            QDir dir(DEFAULT_FILE_STORE);
-            QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
+            if(QSysInfo::kernelType() == "linux")
+            {
+                QDir dir("");
+                QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
+            }
+            else
+            {
+                QDir dir(DEFAULT_FILE_STORE);
+                QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
+            }
         }
         receiveFileTotalSize = receiveFileTransSize = 0;
         receiveFileName = QString::null;
@@ -385,5 +411,3 @@ void MainWindow::continueToSend(qint64 size)
         ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
     }
 }
-
-

@@ -1,4 +1,4 @@
-QMainWindow{
+QMainWindow,QMessageBox{
        background: rgb(248, 248, 255);
        border: none;
 }

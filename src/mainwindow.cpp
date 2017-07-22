@@ -92,6 +92,7 @@ void MainWindow::setLocalUserStatus(bool status)
     ui->btnSendMessage->setEnabled(status);
     ui->btnLogin->setEnabled(!status);
     ui->btnLogout->setEnabled(status);
+    ui->boxMask->setEnabled(!status);
 }
 
 void MainWindow::setLocalFileStatus(bool status)

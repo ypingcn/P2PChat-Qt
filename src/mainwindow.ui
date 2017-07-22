@@ -10,6 +10,18 @@
     <height>480</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>700</width>
+    <height>480</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Chat</string>
   </property>
@@ -20,7 +32,7 @@
       <x>10</x>
       <y>10</y>
       <width>201</width>
-      <height>22</height>
+      <height>24</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="nameLayout">
@@ -247,7 +259,7 @@
       <x>10</x>
       <y>65</y>
       <width>201</width>
-      <height>22</height>
+      <height>24</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="loginTypeLayout">

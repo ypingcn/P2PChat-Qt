@@ -225,13 +225,13 @@ void MainWindow::sendLogoutMessage()
 
 void MainWindow::chooseSendFile()
 {
-    QString name = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
-    if(!name.isEmpty())
+    chooseFileName = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
+    if(!chooseFileName.isEmpty())
     {
         ui->btnSendFile->setEnabled(true);
-        sendFile = new QFile(name);
+        sendFile = new QFile(chooseFileName);
         sendFile->open(QIODevice::ReadOnly);
-        sendFileName = name.right(name.size()-name.lastIndexOf('/')-1);
+        sendFileName = chooseFileName.right(chooseFileName.size()-chooseFileName.lastIndexOf('/')-1);
         showMessage(System,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
         sendTimes = 0;
         sendFileBlock.clear();
@@ -279,7 +279,6 @@ void MainWindow::readConnection()
         QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf("."));
         QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
 
-        qDebug()<<receiveFileName<<name<<suffix;
         if( QSysInfo::kernelType() == "linux" )
         {
             if(QFile::exists(receiveFileName))
@@ -403,6 +402,14 @@ void MainWindow::continueToSend(qint64 size)
         sendSocket->disconnectFromHost();
 
         ui->ProgressBar->hide();
+
+        sendFile->close();
+
+        sendFile = new QFile(chooseFileName);
+        sendFile->open(QIODevice::ReadOnly);
+        sendTimes = 0;
+        sendFileBlock.clear();
+
     }
     else
     {

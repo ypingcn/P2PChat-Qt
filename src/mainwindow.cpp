@@ -276,17 +276,18 @@ void MainWindow::readConnection()
 
         ui->ProgressBar->setMaximum(receiveFileTotalSize);
 
-        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf(".")-1-1);
+        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf("."));
         QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
 
+        qDebug()<<receiveFileName<<name<<suffix;
         if( QSysInfo::kernelType() == "linux" )
         {
             if(QFile::exists(receiveFileName))
             {
                 int id = 1;
-                while( QFile::exists( name + "(" + QString::number(id) + ")" + suffix ) )
+                while( QFile::exists( name + "(" + QString::number(id) + ")." + suffix ) )
                     id++;
-                receiveFile = new QFile( name + "(" + QString::number(id) + ")" + suffix );
+                receiveFile = new QFile( name + "(" + QString::number(id) + ")." + suffix );
             }
             else
                 receiveFile = new QFile(receiveFileName);
@@ -296,9 +297,9 @@ void MainWindow::readConnection()
             if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
             {
                 int id = 1;
-                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix) )
+                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix) )
                     id++;
-                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix);
+                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix);
             }
             else
             {

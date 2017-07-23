@@ -47,6 +47,7 @@ private:
     QTcpServer * fileServer;
 
     /* --- File Send --- */
+    QString chooseFileName; // 所要发送的文件路径信息
     qint8 sendTimes; // 文件发送次数。第一次发送文件信息，后续发送文件内容
     QTcpSocket * sendSocket; // 文件发送socket
     QFile * sendFile; // 将要发送的文件

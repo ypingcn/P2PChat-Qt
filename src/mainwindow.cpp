@@ -92,6 +92,7 @@ void MainWindow::setLocalUserStatus(bool status)
     ui->btnSendMessage->setEnabled(status);
     ui->btnLogin->setEnabled(!status);
     ui->btnLogout->setEnabled(status);
+    ui->boxMask->setEnabled(!status);
 }
 
 void MainWindow::setLocalFileStatus(bool status)
@@ -224,13 +225,13 @@ void MainWindow::sendLogoutMessage()
 
 void MainWindow::chooseSendFile()
 {
-    QString name = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
-    if(!name.isEmpty())
+    chooseFileName = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
+    if(!chooseFileName.isEmpty())
     {
         ui->btnSendFile->setEnabled(true);
-        sendFile = new QFile(name);
+        sendFile = new QFile(chooseFileName);
         sendFile->open(QIODevice::ReadOnly);
-        sendFileName = name.right(name.size()-name.lastIndexOf('/')-1);
+        sendFileName = chooseFileName.right(chooseFileName.size()-chooseFileName.lastIndexOf('/')-1);
         showMessage(System,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
         sendTimes = 0;
         sendFileBlock.clear();
@@ -275,7 +276,7 @@ void MainWindow::readConnection()
 
         ui->ProgressBar->setMaximum(receiveFileTotalSize);
 
-        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf(".")-1-1);
+        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf("."));
         QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
 
         if( QSysInfo::kernelType() == "linux" )
@@ -283,9 +284,9 @@ void MainWindow::readConnection()
             if(QFile::exists(receiveFileName))
             {
                 int id = 1;
-                while( QFile::exists( name + "(" + QString::number(id) + ")" + suffix ) )
+                while( QFile::exists( name + "(" + QString::number(id) + ")." + suffix ) )
                     id++;
-                receiveFile = new QFile( name + "(" + QString::number(id) + ")" + suffix );
+                receiveFile = new QFile( name + "(" + QString::number(id) + ")." + suffix );
             }
             else
                 receiveFile = new QFile(receiveFileName);
@@ -295,9 +296,9 @@ void MainWindow::readConnection()
             if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
             {
                 int id = 1;
-                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix) )
+                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix) )
                     id++;
-                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")" + suffix);
+                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix);
             }
             else
             {
@@ -401,6 +402,14 @@ void MainWindow::continueToSend(qint64 size)
         sendSocket->disconnectFromHost();
 
         ui->ProgressBar->hide();
+
+        sendFile->close();
+
+        sendFile = new QFile(chooseFileName);
+        sendFile->open(QIODevice::ReadOnly);
+        sendTimes = 0;
+        sendFileBlock.clear();
+
     }
     else
     {

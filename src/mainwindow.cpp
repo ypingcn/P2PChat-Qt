@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDateTime>
+#include <QSettings>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDesktopServices>
@@ -13,6 +14,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
+    connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
+    connect(ui->actionTraditionalChinese,&QAction::triggered,this,&MainWindow::setLanguage);
 
     ui->ProgressBar->hide();
 
@@ -57,6 +62,19 @@ MainWindow::~MainWindow()
 {
     sendJson(Logout,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
+}
+void MainWindow::setLanguage()
+{
+    QSettings settings;
+    qDebug()<<QObject::sender();
+    if(QObject::sender() == ui->actionEnglish)
+        settings.setValue("language","eng");
+    else if(QObject::sender() == ui->actionSimplifiedChinese)
+        settings.setValue("language","zh-cn");
+    else if(QObject::sender() == ui->actionTraditionalChinese)
+        settings.setValue("language","zh-tw");
+
+    QMessageBox::information(this,tr("Language"),tr("Restart the app to switch language"),QMessageBox::Yes);
 }
 
 void MainWindow::showMessage(MessageType type, QString hint, QString content)

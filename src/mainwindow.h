@@ -35,6 +35,7 @@ private:
     bool localUserStatus(); // 本地用户登录状态
     void setLocalUserStatus(bool status); // 改变用户登录状态
     void setLocalFileStatus(bool status); // 改变文件传输按钮可用性
+    void setLanguage(void); // 设置界面语言
 
     /* --- UDP --- */
     const qint16 DEFAULT_MESSAGE_PORT = 6108; // 默认信息端口

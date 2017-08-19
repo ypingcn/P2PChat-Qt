@@ -4,15 +4,24 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDateTime>
+#include <QSettings>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QTextBlock>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
+    connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
+    connect(ui->actionTraditionalChinese,&QAction::triggered,this,&MainWindow::setLanguage);
+
+    connect(ui->actionHelp,&QAction::triggered,this,&MainWindow::getHelp);
+    connect(ui->actionAbout,&QAction::triggered,this,&MainWindow::getHelp);
 
     ui->ProgressBar->hide();
 
@@ -57,6 +66,58 @@ MainWindow::~MainWindow()
 {
     sendJson(Logout,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
+}
+void MainWindow::setLanguage()
+{
+    QSettings settings("ypingcn","p2pchat-qt");
+
+    if(QObject::sender() == ui->actionEnglish)
+        settings.setValue("p2pchat-qt-lang","eng");
+    else if(QObject::sender() == ui->actionSimplifiedChinese)
+        settings.setValue("p2pchat-qt-lang","zh-cn");
+    else if(QObject::sender() == ui->actionTraditionalChinese)
+        settings.setValue("p2pchat-qt-lang","zh-tw");
+
+    QMessageBox::information(this,tr("Language"),tr("Restart the app to switch language"),QMessageBox::Yes);
+}
+
+void MainWindow::getHelp()
+{
+    QDialog * help = new QDialog(this);
+    QVBoxLayout * helpLayout = new QVBoxLayout(help);
+
+    if(QObject::sender() == ui->actionAbout)
+    {
+        help->setWindowTitle(tr("About"));
+        QLabel * content = new QLabel();
+        QString website = "<a href=\"https://github.com/ypingcn/P2PChat-Qt\">" + tr("click to know more.") + "</a>";
+        content->setText(tr("A simple program designed for LAN chat.")+website);
+        content->setOpenExternalLinks(true);
+        helpLayout->addWidget(content);
+    }
+    else if(QObject::sender() == ui->actionHelp)
+    {
+        help->setWindowTitle(tr("Help"));
+        QTextEdit * content = new QTextBrowser();
+        help->resize(600,380);
+        content->append(tr("P2PChat-Qt Help"));
+        content->append(tr("\n --- Nick Name Help"));
+        content->append(tr("Valid character include : numbers , alphabet ( lower-case and upper-case ) , underline and simplified chinese character."));
+        content->append(tr("\n --- Mask Help"));
+        content->append(tr("Mask help you to chat in different range."));
+        content->append(tr("#255.255.255.255 option# local usage , Presentation mode"));
+        content->append(tr("#192.168.1.1 option# LAN usage , if two clients whose IP begins with 192.168 , are in the same LAN"));
+        content->append(tr("\n --- IP Args Help"));
+        content->append(tr("two number mean IP address and port number."));
+        content->append(tr("You should input an vaild IP address in the first blank ( four numbers, separated by dots and ranged between 0 and 255 )"));
+        content->append(tr("#127.0.0.1 is Presentation mode, you should input the destination IP instead.( As OnlineUsers shows )"));
+        content->append(tr("Number in the second blank should be a number ranged between 1 and 65535"));
+        content->append(tr("Port number don't recommand to change unless the two clients use the same port for file transmisson."));
+        content->append(tr("'Listen' means I am ready to get the file."));
+        helpLayout->addWidget(content);
+    }
+
+    help->exec();
 }
 
 void MainWindow::showMessage(MessageType type, QString hint, QString content)
@@ -205,22 +266,32 @@ void MainWindow::sendChatMessage()
 
 void MainWindow::sendLoginMessage()
 {
+
     if(!Tools::vaildNickName(ui->edtName->text()))
         QMessageBox::information(this,tr("Invaild Nickname!"),tr("Invaild Nickname!"),QMessageBox::Yes);
+    else if(Tools::getLocalIP() == QString::null)
+        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
     else
     {
         setLocalUserStatus(true);
         setLocalFileStatus(true);
         ui->btnListen->setEnabled(true);
+        ui->labIPAdress->setText(Tools::getLocalIP());
         sendJson(Login,ui->edtName->text());
     }
 }
 
 void MainWindow::sendLogoutMessage()
 {
-    setLocalUserStatus(false);
-    setLocalFileStatus(false);
-    sendJson(Logout,ui->edtName->text());
+    if(Tools::getLocalIP() == QString::null)
+        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
+    else
+    {
+        setLocalUserStatus(false);
+        setLocalFileStatus(false);
+        sendJson(Logout,ui->edtName->text());
+    }
+
 }
 
 void MainWindow::chooseSendFile()

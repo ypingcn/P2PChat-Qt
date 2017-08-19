@@ -1,5 +1,5 @@
-p2pchat-qt (0.1) unstable; urgency=medium
+p2pchat-qt (0.3) unstable; urgency=medium
 
-  * Alpha release
+  * add Language switch(English,Simplified Chinese and Traditional Chinese) and Help bar(explanations for Nick name,Mask and IP args)
 
- -- ypingcn <1344632698@qq.com>  Sat, 17 Jun 2017 21:21:00 +0800
+ -- ypingcn <1344632698@qq.com>  Sat, 19 Aug 2017 14:50:00 +0800

@@ -69,14 +69,14 @@ MainWindow::~MainWindow()
 }
 void MainWindow::setLanguage()
 {
-    QSettings settings;
+    QSettings settings("ypingcn","p2pchat-qt");
 
     if(QObject::sender() == ui->actionEnglish)
-        settings.setValue("language","eng");
+        settings.setValue("p2pchat-qt-lang","eng");
     else if(QObject::sender() == ui->actionSimplifiedChinese)
-        settings.setValue("language","zh-cn");
+        settings.setValue("p2pchat-qt-lang","zh-cn");
     else if(QObject::sender() == ui->actionTraditionalChinese)
-        settings.setValue("language","zh-tw");
+        settings.setValue("p2pchat-qt-lang","zh-tw");
 
     QMessageBox::information(this,tr("Language"),tr("Restart the app to switch language"),QMessageBox::Yes);
 }

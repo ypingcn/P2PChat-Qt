@@ -12,12 +12,15 @@ int main(int argc, char *argv[])
     qApp->setStyleSheet(qss.readAll());
     qss.close();
 
-    QSettings settings;
-    if(!settings.contains("language"))
-        settings.setValue("language","zh-cn");
+    QSettings settings("ypingcn","p2pchat-qt");
+    if(!settings.contains("p2pchat-qt-lang"))
+        settings.setValue("p2pchat-qt-lang","zh-cn");
 
     QTranslator Translator; // 加载翻译文件
-    Translator.load("./local/"+settings.value("language").toString()+".qm");
+    if(QSysInfo::kernelType() == "linux")
+        Translator.load("/usr/bin/p2pchat-qt/local/"+settings.value("p2pchat-qt-lang").toString()+".qm");
+    else
+        Translator.load(settings.value("p2pchat-qt-lang").toString()+".qm");
     a.installTranslator(&Translator);
 
     MainWindow w;

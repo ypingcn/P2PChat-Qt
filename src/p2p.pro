@@ -32,10 +32,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    tools.cpp
+    tools.cpp \
+    fileworker.cpp \
+    chatworker.cpp
 
 HEADERS  += mainwindow.h \
-    tools.h
+    tools.h \
+    fileworker.h \
+    chatworker.h
 
 FORMS    += mainwindow.ui
 

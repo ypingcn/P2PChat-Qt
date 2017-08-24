@@ -72,6 +72,7 @@ void chatWorker::readAllMessage()
                         onlineUsersSet.insert(info);
                     if( currentStatusType == Online) // 本地用户在线则向聊天室发送 Involved 信息，交换在线用户信息
                         sendJson(chatWorker::Involved,USER_NAME);
+                    emit messageShowReady(chatWorker::Login,info,tr(" -- enter the chat room"));
                 }
                 else if(type.toString() == "logout")
                 {

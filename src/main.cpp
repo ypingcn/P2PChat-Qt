@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QTranslator>
 #include <QSettings>
+#include <QPropertyAnimation>
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +26,13 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
+
+    QPropertyAnimation startUp(&w,"windowOpacity");
+    startUp.setDuration(400);
+    startUp.setStartValue(0);
+    startUp.setEndValue(1);
+    startUp.setEasingCurve(QEasingCurve::Linear);
+    startUp.start();
 
     return a.exec();
 }

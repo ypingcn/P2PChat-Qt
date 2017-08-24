@@ -41,6 +41,7 @@ bool fileWorker::startListen()
 void fileWorker::stopWorker()
 {
     fileServer->close();
+    currentListenType = Unlisten;
 }
 
 bool fileWorker::setSendFile(QString path)

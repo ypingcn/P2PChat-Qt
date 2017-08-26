@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ProgressBar->hide();
 
     setLocalUserEnable(false);
-    setLocalFileEnable(false);
+    setWidgetState(Initial);
 
     QFont font;
     font.setPixelSize(DEFAULT_MESSAGE_FONT_SIZE);
@@ -50,7 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
             this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
     connect(chat,SIGNAL(onlineUsersUpdateReady(QSet<QString>)),
             this,SLOT(updateOnlineUsers(QSet<QString>)) );
-
 }
 
 MainWindow::~MainWindow()
@@ -109,6 +108,7 @@ void MainWindow::getHelp()
     }
 
     help->exec();
+
 }
 
 void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString content)
@@ -161,14 +161,36 @@ void MainWindow::setLocalUserEnable(bool status)
     ui->boxMask->setEnabled(!status);
 }
 
-void MainWindow::setLocalFileEnable(bool status)
+void MainWindow::setWidgetState(WidgetState state)
 {
-    /* --- 根据文件传输可用性设置按钮可用性以及监听状态 ---*/
-    ui->edtFinalIP->setEnabled(status);
-    ui->edtFinalPort->setEnabled(status);
-    ui->btnChooseFile->setEnabled(status);
-    ui->btnListen->setEnabled(status);
-    ui->btnListen->setText(tr("Listen"));
+    if(state == Add)
+    {
+        ui->listOnlineUser->resize(ui->listOnlineUser->width(),ui->listOnlineUser->height()-140);
+        ui->browserMessage->resize(ui->browserMessage->width(),ui->browserMessage->height()-140);
+
+        ui->labFinalIP->show();
+        ui->edtFinalIP->show();
+        ui->edtFinalPort->show();
+        ui->btnListen->show();
+        ui->btnChooseFile->show();
+        ui->btnSendFile->show();
+        ui->edtMessage->show();
+        ui->btnSendMessage->show();
+    }
+    else if(state == Remove || state == Initial)
+    {
+        ui->listOnlineUser->resize(ui->listOnlineUser->width(),ui->listOnlineUser->height()+140);
+        ui->browserMessage->resize(ui->browserMessage->width(),ui->browserMessage->height()+140);
+
+        ui->labFinalIP->hide();
+        ui->edtFinalIP->hide();
+        ui->edtFinalPort->hide();
+        ui->btnListen->hide();
+        ui->btnChooseFile->hide();
+        ui->btnSendFile->hide();
+        ui->edtMessage->hide();
+        ui->btnSendMessage->hide();
+    }
 }
 
 void MainWindow::click_btnSendMessage()
@@ -192,7 +214,7 @@ void MainWindow::click_btnLogin()
     else
     {
         setLocalUserEnable(true);
-        setLocalFileEnable(true);
+        setWidgetState(Add);
         ui->btnListen->setEnabled(true);
         ui->labIPAdress->setText(Tools::getLocalIP());
         chat->setMask(ui->boxMask->currentText());
@@ -209,7 +231,7 @@ void MainWindow::click_btnLogout()
     else
     {
         setLocalUserEnable(false);
-        setLocalFileEnable(false);
+        setWidgetState(Remove);
 
         chat->setMask(ui->boxMask->currentText());
         chat->sendJson(chatWorker::Logout,ui->edtName->text());

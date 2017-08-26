@@ -20,6 +20,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    enum WidgetState{Initial,Add,Remove};
+
     fileWorker * file;
     chatWorker * chat;
 
@@ -29,6 +31,7 @@ private:
     void setLocalUserEnable(bool status); // 改变用户登录状态
     void setLocalFileEnable(bool status); // 改变文件传输按钮可用性
     void setLanguage(void); // 设置界面语言
+    void setWidgetState(WidgetState state);
     void getHelp(void);// 帮助界面
 
     const qint8 DEFAULT_MESSAGE_FONT_SIZE = 14; // 默认信息显示大小

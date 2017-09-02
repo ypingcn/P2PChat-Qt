@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QPropertyAnimation>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -163,10 +164,22 @@ void MainWindow::setLocalUserEnable(bool status)
 
 void MainWindow::setWidgetState(WidgetState state)
 {
+    QPropertyAnimation * left = new QPropertyAnimation(ui->listOnlineUser,"size");
+    QPropertyAnimation * right = new QPropertyAnimation(ui->browserMessage,"size");
+    left->setDuration(200);
+    right->setDuration(200);
+    left->setEasingCurve(QEasingCurve::OutQuart);
+    right->setEasingCurve(QEasingCurve::OutQuart);
+
     if(state == Add)
     {
-        ui->listOnlineUser->resize(ui->listOnlineUser->width(),ui->listOnlineUser->height()-140);
-        ui->browserMessage->resize(ui->browserMessage->width(),ui->browserMessage->height()-140);
+        left->setStartValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()));
+        left->setEndValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()-140));
+        right->setStartValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()));
+        right->setEndValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()-140));
+
+        left->start();
+        right->start();
 
         ui->labFinalIP->show();
         ui->edtFinalIP->show();
@@ -179,8 +192,13 @@ void MainWindow::setWidgetState(WidgetState state)
     }
     else if(state == Remove || state == Initial)
     {
-        ui->listOnlineUser->resize(ui->listOnlineUser->width(),ui->listOnlineUser->height()+140);
-        ui->browserMessage->resize(ui->browserMessage->width(),ui->browserMessage->height()+140);
+        left->setStartValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()));
+        left->setEndValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()+140));
+        right->setStartValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()));
+        right->setEndValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()+140));
+
+        left->start();
+        right->start();
 
         ui->labFinalIP->hide();
         ui->edtFinalIP->hide();

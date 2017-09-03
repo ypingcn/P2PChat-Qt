@@ -51,3 +51,13 @@ QPushButton:!enabled {
         padding-left: 5px;
         padding-right: 5px;
 }
+
+QWidget#hintWidget {
+        border-radius: 4px;
+        border: 1px solid rgb(111, 156, 207);
+        background: rgb(111, 156, 207);
+}
+QLabel#hintContent {
+        color: white;
+        background: rgba(111, 156, 207, 80%);
+}

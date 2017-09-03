@@ -34,12 +34,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     tools.cpp \
     fileworker.cpp \
-    chatworker.cpp
+    chatworker.cpp \
+    hintwidget.cpp
 
 HEADERS  += mainwindow.h \
     tools.h \
     fileworker.h \
-    chatworker.h
+    chatworker.h \
+    hintwidget.h
 
 FORMS    += mainwindow.ui
 

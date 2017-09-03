@@ -4,6 +4,7 @@
 #include "tools.h"
 #include "fileworker.h"
 #include "chatworker.h"
+#include "hintwidget.h"
 
 #include <QMainWindow>
 
@@ -27,6 +28,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    hintWidget * hint;
 
     void setLocalUserEnable(bool status); // 改变用户登录状态
     void setLocalFileEnable(bool status); // 改变文件传输按钮可用性

@@ -3,7 +3,6 @@
 
 #include <QDateTime>
 #include <QSettings>
-#include <QMessageBox>
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QPropertyAnimation>
@@ -13,6 +12,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    hint = new hintWidget(ui->browserMessage);
+    hint->resize(ui->browserMessage->width(),32);
+    hint->hide();
+
 
     connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
@@ -69,7 +73,7 @@ void MainWindow::setLanguage()
     else if(QObject::sender() == ui->actionTraditionalChinese)
         settings.setValue("p2pchat-qt-lang","zh-tw");
 
-    QMessageBox::information(this,tr("Language"),tr("Restart the app to switch language"),QMessageBox::Yes);
+    hint->setText("Restart the app to switch language");
 }
 
 void MainWindow::getHelp()
@@ -214,7 +218,9 @@ void MainWindow::setWidgetState(WidgetState state)
 void MainWindow::click_btnSendMessage()
 {
     if(ui->edtMessage->toPlainText().isEmpty())
-        QMessageBox::information(this,tr("No message"),tr("No message"),QMessageBox::Yes);
+    {
+        hint->setText("No message");
+    }
     else
     {
         chat->setMask(ui->boxMask->currentText());
@@ -226,9 +232,13 @@ void MainWindow::click_btnSendMessage()
 void MainWindow::click_btnLogin()
 {
     if(!Tools::vaildNickName(ui->edtName->text()))
-        QMessageBox::information(this,tr("Invaild Nickname!"),tr("Invaild Nickname!"),QMessageBox::Yes);
+    {
+        hint->setText("Invaild Nickname!");
+    }
     else if(Tools::getLocalIP() == QString::null)
-        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
+    {
+        hint->setText("Check your Network to login");
+    }
     else
     {
         setLocalUserEnable(true);
@@ -245,7 +255,9 @@ void MainWindow::click_btnLogin()
 void MainWindow::click_btnLogout()
 {
     if(Tools::getLocalIP() == QString::null)
-        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
+    {
+        hint->setText("Check your Network to logout");
+    }
     else
     {
         setLocalUserEnable(false);

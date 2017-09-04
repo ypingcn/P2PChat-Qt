@@ -73,7 +73,7 @@ void MainWindow::setLanguage()
     else if(QObject::sender() == ui->actionTraditionalChinese)
         settings.setValue("p2pchat-qt-lang","zh-tw");
 
-    hint->setText("Restart the app to switch language");
+    hint->setText(tr("Restart the app to switch language"));
 }
 
 void MainWindow::getHelp()
@@ -219,7 +219,7 @@ void MainWindow::click_btnSendMessage()
 {
     if(ui->edtMessage->toPlainText().isEmpty())
     {
-        hint->setText("No message");
+        hint->setText(tr("No message"));
     }
     else
     {
@@ -233,11 +233,11 @@ void MainWindow::click_btnLogin()
 {
     if(!Tools::vaildNickName(ui->edtName->text()))
     {
-        hint->setText("Invaild Nickname!");
+        hint->setText(tr("Invaild Nickname!"));
     }
     else if(Tools::getLocalIP() == QString::null)
     {
-        hint->setText("Check your Network to login");
+        hint->setText(tr("Check your Network to login"));
     }
     else
     {
@@ -256,7 +256,7 @@ void MainWindow::click_btnLogout()
 {
     if(Tools::getLocalIP() == QString::null)
     {
-        hint->setText("Check your Network to logout");
+        hint->setText(tr("Check your Network to logout"));
     }
     else
     {

@@ -1,5 +1,5 @@
-p2pchat-qt (0.3) unstable; urgency=medium
+p2pchat-qt (0.4) unstable; urgency=medium
 
-  * add Language switch(English,Simplified Chinese and Traditional Chinese) and Help bar(explanations for Nick name,Mask and IP args)
+  * add animation for startup and widget resizement and expand information display zone for visitors
 
- -- ypingcn <1344632698@qq.com>  Sat, 19 Aug 2017 14:50:00 +0800
+ -- ypingcn <1344632698@qq.com>  Wed, 06 Sep 2017 10:24:00 +0800

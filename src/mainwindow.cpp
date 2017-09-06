@@ -1,20 +1,22 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QDateTime>
 #include <QSettings>
-#include <QMessageBox>
 #include <QFileDialog>
 #include <QDesktopServices>
-#include <QTextBlock>
+#include <QPropertyAnimation>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    hint = new hintWidget(ui->browserMessage);
+    hint->resize(ui->browserMessage->width(),32);
+    hint->hide();
+
 
     connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
@@ -23,48 +25,41 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionHelp,&QAction::triggered,this,&MainWindow::getHelp);
     connect(ui->actionAbout,&QAction::triggered,this,&MainWindow::getHelp);
 
-    ui->ProgressBar->hide();
+    connect(ui->btnLogin,SIGNAL(clicked()),this,SLOT(click_btnLogin()));
+    connect(ui->btnLogout,SIGNAL(clicked(bool)),this,SLOT(click_btnLogout()));
+    connect(ui->btnListen,SIGNAL(clicked(bool)),this,SLOT(click_btnListen()));
+    connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(click_btnSendFile()));
+    connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(click_btnChooseFile()));
+    connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(click_btnSendMessage()));
 
     ui->labIPAdress->setText(Tools::getLocalIP());
     ui->edtFinalIP->setText(DEFAULT_FILE_IP);
     ui->edtFinalPort->setText(QString::number(DEFAULT_FILE_PORT));
+    ui->ProgressBar->hide();
 
-    setLocalUserStatus(false);
-    setLocalFileStatus(false);
-
-    sendTimes = 0;
+    setLocalUserEnable(false);
+    setWidgetState(Initial);
 
     QFont font;
     font.setPixelSize(DEFAULT_MESSAGE_FONT_SIZE);
     ui->browserMessage->setFont(font);
 
-    messageSender = new QUdpSocket();
-    messageReader = new QUdpSocket();
+    file = new fileWorker;
+    chat = new chatWorker;
 
-    messageReader->bind(DEFAULT_MESSAGE_PORT,QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint );
-    connect(messageReader,SIGNAL(readyRead()),this,SLOT(readAllMessage()));
-
-    connect(ui->btnLogin,SIGNAL(clicked()),this,SLOT(sendLoginMessage()));
-    connect(ui->btnLogout,SIGNAL(clicked(bool)),this,SLOT(sendLogoutMessage()));
-    connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(sendChatMessage()));
-    connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(chooseSendFile()));
-
-    connect(ui->btnListen,SIGNAL(clicked(bool)),this,SLOT(listen()));
-    connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(sendConnection()));
-
-    fileServer = new QTcpServer();
-    connect(fileServer,SIGNAL(newConnection()),this,SLOT(acceptConnection()));
-
-    sendSocket = new QTcpSocket();
-    connect(sendSocket,SIGNAL(connected()),this,SLOT(sendFileInfo()));
-    connect(sendSocket,SIGNAL(bytesWritten(qint64)),this,SLOT(continueToSend(qint64)));
-
-
+    connect(file,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
+            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
+    connect(file,SIGNAL(progressBarUpdateReady(fileWorker::UpdateType,qint64)),
+            this,SLOT(updateProgressBar(fileWorker::UpdateType,qint64)) );
+    connect(chat,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
+            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
+    connect(chat,SIGNAL(onlineUsersUpdateReady(QSet<QString>)),
+            this,SLOT(updateOnlineUsers(QSet<QString>)) );
 }
 
 MainWindow::~MainWindow()
 {
-    sendJson(Logout,ui->edtName->text()); // 销毁对象前先退出
+    chat->sendJson(chatWorker::Logout,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
 }
 void MainWindow::setLanguage()
@@ -78,7 +73,7 @@ void MainWindow::setLanguage()
     else if(QObject::sender() == ui->actionTraditionalChinese)
         settings.setValue("p2pchat-qt-lang","zh-tw");
 
-    QMessageBox::information(this,tr("Language"),tr("Restart the app to switch language"),QMessageBox::Yes);
+    hint->setText(tr("Restart the app to switch language"));
 }
 
 void MainWindow::getHelp()
@@ -118,18 +113,19 @@ void MainWindow::getHelp()
     }
 
     help->exec();
+
 }
 
-void MainWindow::showMessage(MessageType type, QString hint, QString content)
+void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString content)
 {
     QDateTime now = QDateTime::currentDateTime();
-    if(type == Login || type == Logout || type == System)
+    if(type == chatWorker::Login || type == chatWorker::Logout || type == chatWorker::System)
     {
         ui->browserMessage->setTextColor(QColor(190,190,190));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
         ui->browserMessage->append(content);
     }
-    else if(type == Chat)
+    else if(type == chatWorker::Chat)
     {
         ui->browserMessage->setTextColor(QColor(70,130,180));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
@@ -138,14 +134,28 @@ void MainWindow::showMessage(MessageType type, QString hint, QString content)
     }
 }
 
-bool MainWindow::localUserStatus()
+void MainWindow::updateProgressBar(fileWorker::UpdateType type,qint64 number)
 {
-    if(ui->edtName->isEnabled()) // 根据昵称输入框判断本地用户在线情况
-        return false;
-    return true;
+    if(type == fileWorker::Show)
+        ui->ProgressBar->show();
+    else if(type == fileWorker::Hide)
+        ui->ProgressBar->hide();
+    else if(type == fileWorker::SetValue)
+        ui->ProgressBar->setValue(number);
+    else if(type == fileWorker::SetMax)
+        ui->ProgressBar->setMaximum(number);
 }
 
-void MainWindow::setLocalUserStatus(bool status)
+void MainWindow::updateOnlineUsers(QSet<QString> set)
+{
+    ui->listOnlineUser->clear();
+    ui->listOnlineUser->insertItem(0,tr("Online Users:"));
+    int i = 1;
+    for(auto it = set.begin();it!= set.end() ;it++)
+        ui->listOnlineUser->insertItem(i++,*it);
+}
+
+void MainWindow::setLocalUserEnable(bool status)
 {
     /* --- 根据用户状态设置按钮可用性 ---*/
     ui->edtName->setEnabled(!status);
@@ -156,338 +166,149 @@ void MainWindow::setLocalUserStatus(bool status)
     ui->boxMask->setEnabled(!status);
 }
 
-void MainWindow::setLocalFileStatus(bool status)
+void MainWindow::setWidgetState(WidgetState state)
 {
-    /* --- 根据文件传输可用性设置按钮可用性以及监听状态 ---*/
-    ui->edtFinalIP->setEnabled(status);
-    ui->edtFinalPort->setEnabled(status);
-    ui->btnChooseFile->setEnabled(status);
-    ui->btnListen->setEnabled(status);
-    listenType = Unlisten;
-    ui->btnListen->setText(tr("Listen"));
-}
+    QPropertyAnimation * left = new QPropertyAnimation(ui->listOnlineUser,"size");
+    QPropertyAnimation * right = new QPropertyAnimation(ui->browserMessage,"size");
+    left->setDuration(200);
+    right->setDuration(200);
+    left->setEasingCurve(QEasingCurve::OutQuart);
+    right->setEasingCurve(QEasingCurve::OutQuart);
 
-void MainWindow::sendJson(MessageType type, QString nick_name, QString content)
-{
-    QJsonObject obj;
-
-    if(nick_name.isEmpty())
-        return;
-
-    if(type == Chat)
-        obj.insert("type","chat");
-    else if(type == Login)
-        obj.insert("type","login");
-    else if(type == Logout)
-        obj.insert("type","logout");
-    else if(type == Online)
-        obj.insert("type","online");
-
-
-    if(content != "") // content 默认为空
-        obj.insert("content",content);
-
-    obj.insert("nick-name",nick_name);
-
-    QJsonDocument doc; // json 格式封装将要发送到聊天室内的信息
-    doc.setObject(obj);
-
-    QByteArray data = doc.toJson();
-
-    messageSender->writeDatagram(data.data(),data.size(),QHostAddress(ui->boxMask->currentText()),DEFAULT_MESSAGE_PORT);
-}
-
-void MainWindow::readAllMessage()
-{
-    while (messageReader->hasPendingDatagrams())
+    if(state == Add)
     {
-        QByteArray data;
-        data.resize(messageReader->pendingDatagramSize());
-        QHostAddress source; // 信息来源IP
-        messageReader->readDatagram(data.data(),data.size(),&source);
+        left->setStartValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()));
+        left->setEndValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()-140));
+        right->setStartValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()));
+        right->setEndValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()-140));
 
-        QJsonParseError jsonError;
-        QJsonDocument doc = QJsonDocument::fromJson(data,&jsonError);
-        if(jsonError.error == QJsonParseError::NoError && doc.isObject())
-        {
-            QJsonObject obj = doc.object();
-            if(obj.contains("type") && obj.contains("nick-name"))
-            {
-                QJsonValue type = obj.take("type"); // 信息类型
-                QString info = obj.take("nick-name").toString() + "(" + Tools::toIPv4(source.toIPv4Address()) + ")" ;
-                if(type.toString() == "chat" && obj.contains("content"))
-                {
-                    showMessage(Chat,info,obj.take("content").toString());
-                }
-                else if(type.toString() == "login")
-                {
-                    /* --- 查找同名、同IP的用户信息 不存在则添加--- */
-                    QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
-                    if(user.size() == 0)
-                        ui->listOnlineUser->insertItem(ui->listOnlineUser->count()+1,info);
-                    showMessage(Login,info,tr(" -- enter the chat room"));
-                    if(localUserStatus()) // 本地用户在线则向聊天室发送 Online 信息，交换在线用户信息
-                        sendJson(Online,ui->edtName->text());
-                }
-                else if(type.toString() == "logout")
-                {
-                    /* --- 查找退出用户信息并从列表删除 --- */
-                    QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
-                    for(auto it = user.begin();it!=user.end();it++)
-                    {
-                        ui->listOnlineUser->removeItemWidget((*it));
-                        delete (*it);
-                    }
-                    showMessage(Logout,info,tr(" -- quit the chat room"));
-                }
-                else if(type.toString() == "online")
-                {
-                    /* --- 更新在线用户信息 --- */
-                    QList<QListWidgetItem *> user = ui->listOnlineUser->findItems(info, Qt::MatchExactly | Qt::MatchCaseSensitive );
-                    if(user.size() == 0)
-                        ui->listOnlineUser->insertItem(ui->listOnlineUser->count()+1,info);
-                }
-            }
-        }
+        left->start();
+        right->start();
+
+        ui->labFinalIP->show();
+        ui->edtFinalIP->show();
+        ui->edtFinalPort->show();
+        ui->btnListen->show();
+        ui->btnChooseFile->show();
+        ui->btnSendFile->show();
+        ui->edtMessage->show();
+        ui->btnSendMessage->show();
     }
+    else if(state == Remove || state == Initial)
+    {
+        left->setStartValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()));
+        left->setEndValue(QSize(ui->listOnlineUser->width(),ui->listOnlineUser->height()+140));
+        right->setStartValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()));
+        right->setEndValue(QSize(ui->browserMessage->width(),ui->browserMessage->height()+140));
 
+        left->start();
+        right->start();
+
+        ui->labFinalIP->hide();
+        ui->edtFinalIP->hide();
+        ui->edtFinalPort->hide();
+        ui->btnListen->hide();
+        ui->btnChooseFile->hide();
+        ui->btnSendFile->hide();
+        ui->edtMessage->hide();
+        ui->btnSendMessage->hide();
+    }
 }
 
-void MainWindow::sendChatMessage()
+void MainWindow::click_btnSendMessage()
 {
     if(ui->edtMessage->toPlainText().isEmpty())
-        QMessageBox::information(this,tr("No message"),tr("No message"),QMessageBox::Yes);
+    {
+        hint->setText(tr("No message"));
+    }
     else
     {
-        sendJson(Chat,ui->edtName->text(),ui->edtMessage->toPlainText());
+        chat->setMask(ui->boxMask->currentText());
+        chat->sendJson(chatWorker::Chat,ui->edtName->text(),ui->edtMessage->toPlainText());
         ui->edtMessage->clear();
     }
 }
 
-void MainWindow::sendLoginMessage()
+void MainWindow::click_btnLogin()
 {
-
     if(!Tools::vaildNickName(ui->edtName->text()))
-        QMessageBox::information(this,tr("Invaild Nickname!"),tr("Invaild Nickname!"),QMessageBox::Yes);
+    {
+        hint->setText(tr("Invaild Nickname!"));
+    }
     else if(Tools::getLocalIP() == QString::null)
-        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
+    {
+        hint->setText(tr("Check your Network to login"));
+    }
     else
     {
-        setLocalUserStatus(true);
-        setLocalFileStatus(true);
+        setLocalUserEnable(true);
+        setWidgetState(Add);
         ui->btnListen->setEnabled(true);
         ui->labIPAdress->setText(Tools::getLocalIP());
-        sendJson(Login,ui->edtName->text());
+        chat->setMask(ui->boxMask->currentText());
+        chat->sendJson(chatWorker::Login,ui->edtName->text());
+        chat->setStatus(chatWorker::Online);
+        chat->setUserName(ui->edtName->text());
     }
 }
 
-void MainWindow::sendLogoutMessage()
+void MainWindow::click_btnLogout()
 {
     if(Tools::getLocalIP() == QString::null)
-        QMessageBox::question(this,tr("Offline"),tr("Check your Network to login"),QMessageBox::Yes);
+    {
+        hint->setText(tr("Check your Network to logout"));
+    }
     else
     {
-        setLocalUserStatus(false);
-        setLocalFileStatus(false);
-        sendJson(Logout,ui->edtName->text());
+        setLocalUserEnable(false);
+        setWidgetState(Remove);
+
+        chat->setMask(ui->boxMask->currentText());
+        chat->sendJson(chatWorker::Logout,ui->edtName->text());
+        chat->setStatus(chatWorker::Offline);
     }
 
 }
 
-void MainWindow::chooseSendFile()
+void MainWindow::click_btnChooseFile()
 {
-    chooseFileName = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
-    if(!chooseFileName.isEmpty())
+    QString path = QFileDialog::getOpenFileName(this, tr("Choose File"), ".", tr("All File(*.*)"));
+    if(!path.isEmpty())
     {
-        ui->btnSendFile->setEnabled(true);
-        sendFile = new QFile(chooseFileName);
-        sendFile->open(QIODevice::ReadOnly);
-        sendFileName = chooseFileName.right(chooseFileName.size()-chooseFileName.lastIndexOf('/')-1);
-        showMessage(System,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
-        sendTimes = 0;
-        sendFileBlock.clear();
+        if( file->setSendFile(path) )
+            ui->btnSendFile->setEnabled(true);
     }
 }
 
-void MainWindow::listen()
+void MainWindow::click_btnListen()
 {
-    if(listenType == Unlisten)
+    fileWorker::ListenType listenType = file->status();
+
+    if(listenType == fileWorker::Unlisten)
     {
-        ui->btnListen->setText(tr("UnListen"));
-        listenType = Listen;
-        fileServer->listen(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
-        showMessage(System,tr("System"),tr(" -- File Port Listening"));
+        file->setArgs(ui->edtFinalIP->text(), ui->edtFinalPort->text());
+        if( file->startListen() )
+        {
+            ui->btnListen->setText(tr("UnListen"));
+            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening"));
+        }
+        else
+        {
+            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Fail"));
+        }
+
     }
-    else if(listenType == Listen)
+    else if(listenType == fileWorker::Listen)
     {
         ui->btnListen->setText(tr("Listen"));
-        listenType = Unlisten;
-        fileServer->close();
-        showMessage(System,tr("System"),tr(" -- File Port Listening Closed"));
+        file->stopWorker();
+        showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Closed"));
     }
 }
 
-void MainWindow::acceptConnection()
+void MainWindow::click_btnSendFile()
 {
-    receiveFileTotalSize = receiveFileTransSize = 0;
-    showMessage(System,tr("System"),tr(" -- New File Arriving"));
-
-    receiveSocket = fileServer->nextPendingConnection();
-    connect(receiveSocket,SIGNAL(readyRead()),this,SLOT(readConnection()));
-
-    ui->ProgressBar->show(); // 显示文件传输进度条
+    file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
+    file->startSend();
 }
 
-void MainWindow::readConnection()
-{
-    if(receiveFileTotalSize == 0)
-    {
-        QDataStream in(receiveSocket);
-        in>>receiveFileTotalSize>>receiveFileTransSize>>receiveFileName;
-
-        ui->ProgressBar->setMaximum(receiveFileTotalSize);
-
-        QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf("."));
-        QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
-
-        if( QSysInfo::kernelType() == "linux" )
-        {
-            if(QFile::exists(receiveFileName))
-            {
-                int id = 1;
-                while( QFile::exists( name + "(" + QString::number(id) + ")." + suffix ) )
-                    id++;
-                receiveFile = new QFile( name + "(" + QString::number(id) + ")." + suffix );
-            }
-            else
-                receiveFile = new QFile(receiveFileName);
-        }
-        else
-        {
-            if(QFile::exists(DEFAULT_FILE_STORE+receiveFileName))
-            {
-                int id = 1;
-                while( QFile::exists(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix) )
-                    id++;
-                receiveFile = new QFile(DEFAULT_FILE_STORE + name + "(" + QString::number(id) + ")." + suffix);
-            }
-            else
-            {
-                receiveFile = new QFile(DEFAULT_FILE_STORE+receiveFileName); // 保存文件
-            }
-        }
-
-        receiveFile->open(QFile::ReadWrite);
-
-        showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
-    }
-    else
-    {
-        receiveFileBlock = receiveSocket->readAll();
-        receiveFileTransSize += receiveFileBlock.size();
-
-        ui->ProgressBar->setValue(receiveFileTransSize); // 更新进度条
-
-        receiveFile->write(receiveFileBlock);
-        receiveFile->flush();
-    }
-
-    if(receiveFileTransSize == receiveFileTotalSize) // 文件传输完成
-    {
-        showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
-
-        QMessageBox::StandardButton choice;
-        choice = QMessageBox::information(this,tr("Open File Folder?"),tr("Open File Folder?"),QMessageBox::Yes,QMessageBox::No);
-        if(choice == QMessageBox::Yes)
-        {
-            if(QSysInfo::kernelType() == "linux")
-            {
-                QDir dir("");
-                QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
-            }
-            else
-            {
-                QDir dir(DEFAULT_FILE_STORE);
-                QDesktopServices::openUrl(QUrl(dir.absolutePath() , QUrl::TolerantMode)); // 打开文件夹
-            }
-        }
-        receiveFileTotalSize = receiveFileTransSize = 0;
-        receiveFileName = QString::null;
-        ui->ProgressBar->hide();
-        receiveFile->close();
-    }
-}
-
-void MainWindow::sendConnection()
-{
-    if(sendTimes == 0)
-    {
-        sendSocket->connectToHost(QHostAddress(ui->edtFinalIP->text()),ui->edtFinalPort->text().toInt());
-        if(!sendSocket->waitForConnected(2000)) // 检测网络情况
-            QMessageBox::information(this,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
-        else
-            sendTimes = 1;
-    }
-    else
-        sendFileInfo();
-
-}
-
-void MainWindow::sendFileInfo()
-{
-    sendFileEachTransSize = 40 * 1024;
-
-    QDataStream out(&sendFileBlock,QIODevice::WriteOnly);
-    out<<qint64(0)<<qint64(0)<<sendFileName;
-
-    sendFileTotalSize = sendFile->size() + sendFileBlock.size();
-    sendFileLeftSize = sendFile->size() + sendFileBlock.size();
-
-    out.device()->seek(0);
-    out<<sendFileTotalSize<<qint64(sendFileBlock.size());
-
-    sendSocket->write(sendFileBlock);
-
-    ui->ProgressBar->setMaximum(sendFileTotalSize);
-    ui->ProgressBar->setValue(0); // 更新进度条数值
-    ui->ProgressBar->show(); // 显示进度条
-
-    showMessage(System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
-}
-
-void MainWindow::continueToSend(qint64 size)
-{
-    if(sendSocket->state() != QAbstractSocket::ConnectedState) // 网络出错
-    {
-        QMessageBox::information(this,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
-        ui->ProgressBar->hide();
-        return;
-    }
-
-    sendFileLeftSize -= size;
-
-    if(sendFileLeftSize == 0) // 文件发送完成
-    {
-        showMessage(System,tr("System"),tr(" -- File Transmission Complete"));
-
-        sendSocket->disconnectFromHost();
-
-        ui->ProgressBar->hide();
-
-        sendFile->close();
-
-        sendFile = new QFile(chooseFileName);
-        sendFile->open(QIODevice::ReadOnly);
-        sendTimes = 0;
-        sendFileBlock.clear();
-
-    }
-    else
-    {
-        sendFileBlock = sendFile->read( qMin(sendFileLeftSize,sendFileEachTransSize) );
-
-        sendSocket->write(sendFileBlock);
-
-        ui->ProgressBar->setValue(sendFileTotalSize - sendFileLeftSize);
-    }
-}

@@ -2,6 +2,8 @@
 #include <QApplication>
 #include <QTranslator>
 #include <QSettings>
+#include <QDesktopWidget>
+#include <QPropertyAnimation>
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +27,14 @@ int main(int argc, char *argv[])
 
     MainWindow w;
     w.show();
+    w.move(( QApplication::desktop()->width()-w.width() )/2,( QApplication::desktop()->height()-w.height() )/2 );
+
+    QPropertyAnimation startUp(&w,"windowOpacity");
+    startUp.setDuration(400);
+    startUp.setStartValue(0);
+    startUp.setEndValue(1);
+    startUp.setEasingCurve(QEasingCurve::Linear);
+    startUp.start();
 
     return a.exec();
 }

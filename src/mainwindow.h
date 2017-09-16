@@ -43,8 +43,8 @@ private:
 
 private slots:
 
-    void showMessage(chatWorker::MessageType type,QString hint,QString content); // 将接收到或自身的信息显示到内容框内
-    void updateProgressBar(fileWorker::UpdateType type, qint64 number);
+    void showMessage(chatWorker::message_t type,QString hint,QString content); // 将接收到或自身的信息显示到内容框内
+    void updateProgressBar(fileWorker::update_t type, qint64 number);
     void updateOnlineUsers(QSet<QString> set);
 
     void click_btnSendMessage();

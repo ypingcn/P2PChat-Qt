@@ -17,8 +17,8 @@ public:
 
     explicit fileWorker(QObject *parent = 0);
 
-    enum ListenType{Listen,Unlisten}; // 正在监听、未监听
-    enum UpdateType{Show,Hide,SetMax,SetValue}; // 更新进度条状态（显示、隐藏、设置最大值、设置当前数值）
+    enum listen_t{LT_LISTEN,LT_UNLISTEN}; // 正在监听、未监听
+    enum update_t{UT_SHOW,UT_HIDE,UT_SETMAX,UT_SETVALUE}; // 更新进度条状态（显示、隐藏、设置最大值、设置当前数值）
 
     bool startListen(void);
     void startSend(void);
@@ -27,11 +27,11 @@ public:
     bool setSendFile(QString path);
     void setArgs(QString ip,QString port);
 
-    ListenType status();
+    listen_t status();
 
 private:
 
-    ListenType currentListenType; // 程序对于接收端口的监听状态
+    listen_t currentListenType; // 程序对于接收端口的监听状态
 
     QString IP,PORT;
     const QString DEFAULT_FILE_STORE = "D:\\"; // 默认保存到D盘（Windows端有效）
@@ -56,8 +56,8 @@ private:
 
 signals:
 
-    void messageShowReady(chatWorker::MessageType type, QString hint, QString content);
-    void progressBarUpdateReady(fileWorker::UpdateType type, qint64 number);
+    void messageShowReady(chatWorker::message_t type, QString hint, QString content);
+    void progressBarUpdateReady(fileWorker::update_t type, qint64 number);
 
 private slots:
 

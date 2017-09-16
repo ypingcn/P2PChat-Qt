@@ -47,19 +47,19 @@ MainWindow::MainWindow(QWidget *parent) :
     file = new fileWorker;
     chat = new chatWorker;
 
-    connect(file,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
-            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
-    connect(file,SIGNAL(progressBarUpdateReady(fileWorker::UpdateType,qint64)),
-            this,SLOT(updateProgressBar(fileWorker::UpdateType,qint64)) );
-    connect(chat,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
-            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
+    connect(file,SIGNAL(messageShowReady(chatWorker::message_t,QString,QString)),
+            this,SLOT(showMessage(chatWorker::message_t,QString,QString)) );
+    connect(file,SIGNAL(progressBarUpdateReady(fileWorker::update_t,qint64)),
+            this,SLOT(updateProgressBar(fileWorker::update_t,qint64)) );
+    connect(chat,SIGNAL(messageShowReady(chatWorker::message_t,QString,QString)),
+            this,SLOT(showMessage(chatWorker::message_t,QString,QString)) );
     connect(chat,SIGNAL(onlineUsersUpdateReady(QSet<QString>)),
             this,SLOT(updateOnlineUsers(QSet<QString>)) );
 }
 
 MainWindow::~MainWindow()
 {
-    chat->sendJson(chatWorker::Logout,ui->edtName->text()); // 销毁对象前先退出
+    chat->sendJson(chatWorker::MT_LOGOUT,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
 }
 void MainWindow::setLanguage()
@@ -116,16 +116,16 @@ void MainWindow::getHelp()
 
 }
 
-void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString content)
+void MainWindow::showMessage(chatWorker::message_t type, QString hint, QString content)
 {
     QDateTime now = QDateTime::currentDateTime();
-    if(type == chatWorker::Login || type == chatWorker::Logout || type == chatWorker::System)
+    if(type == chatWorker::MT_LOGIN || type == chatWorker::MT_LOGOUT || type == chatWorker::MT_SYSTEM)
     {
         ui->browserMessage->setTextColor(QColor(190,190,190));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
         ui->browserMessage->append(content);
     }
-    else if(type == chatWorker::Chat)
+    else if(type == chatWorker::MT_CHAT)
     {
         ui->browserMessage->setTextColor(QColor(70,130,180));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
@@ -134,15 +134,15 @@ void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString
     }
 }
 
-void MainWindow::updateProgressBar(fileWorker::UpdateType type,qint64 number)
+void MainWindow::updateProgressBar(fileWorker::update_t type,qint64 number)
 {
-    if(type == fileWorker::Show)
+    if(type == fileWorker::UT_SHOW)
         ui->ProgressBar->show();
-    else if(type == fileWorker::Hide)
+    else if(type == fileWorker::UT_HIDE)
         ui->ProgressBar->hide();
-    else if(type == fileWorker::SetValue)
+    else if(type == fileWorker::UT_SETVALUE)
         ui->ProgressBar->setValue(number);
-    else if(type == fileWorker::SetMax)
+    else if(type == fileWorker::UT_SETMAX)
         ui->ProgressBar->setMaximum(number);
 }
 
@@ -224,7 +224,7 @@ void MainWindow::click_btnSendMessage()
     else
     {
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Chat,ui->edtName->text(),ui->edtMessage->toPlainText());
+        chat->sendJson(chatWorker::MT_CHAT,ui->edtName->text(),ui->edtMessage->toPlainText());
         ui->edtMessage->clear();
     }
 }
@@ -246,8 +246,8 @@ void MainWindow::click_btnLogin()
         ui->btnListen->setEnabled(true);
         ui->labIPAdress->setText(Tools::getLocalIP());
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Login,ui->edtName->text());
-        chat->setStatus(chatWorker::Online);
+        chat->sendJson(chatWorker::MT_LOGIN,ui->edtName->text());
+        chat->setStatus(chatWorker::ST_OFFLINE);
         chat->setUserName(ui->edtName->text());
     }
 }
@@ -264,8 +264,8 @@ void MainWindow::click_btnLogout()
         setWidgetState(Remove);
 
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Logout,ui->edtName->text());
-        chat->setStatus(chatWorker::Offline);
+        chat->sendJson(chatWorker::MT_LOGOUT,ui->edtName->text());
+        chat->setStatus(chatWorker::ST_OFFLINE);
     }
 
 }
@@ -282,27 +282,27 @@ void MainWindow::click_btnChooseFile()
 
 void MainWindow::click_btnListen()
 {
-    fileWorker::ListenType listenType = file->status();
+    fileWorker::listen_t listenType = file->status();
 
-    if(listenType == fileWorker::Unlisten)
+    if(listenType == fileWorker::LT_UNLISTEN)
     {
         file->setArgs(ui->edtFinalIP->text(), ui->edtFinalPort->text());
         if( file->startListen() )
         {
             ui->btnListen->setText(tr("UnListen"));
-            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening"));
+            showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening"));
         }
         else
         {
-            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Fail"));
+            showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening Fail"));
         }
 
     }
-    else if(listenType == fileWorker::Listen)
+    else if(listenType == fileWorker::LT_LISTEN)
     {
         ui->btnListen->setText(tr("Listen"));
         file->stopWorker();
-        showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Closed"));
+        showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening Closed"));
     }
 }
 

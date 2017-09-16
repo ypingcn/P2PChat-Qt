@@ -9,7 +9,7 @@
 
 fileWorker::fileWorker(QObject *parent) : QObject(parent)
 {
-    currentListenType = Unlisten;
+    currentListenType = LT_UNLISTEN;
 
     sendTimes = 0;
 
@@ -21,7 +21,7 @@ fileWorker::fileWorker(QObject *parent) : QObject(parent)
     connect(sendSocket,SIGNAL(bytesWritten(qint64)),this,SLOT(continueToSend(qint64)));
 }
 
-fileWorker::ListenType fileWorker::status()
+fileWorker::listen_t fileWorker::status()
 {
     return currentListenType;
 }
@@ -31,9 +31,9 @@ bool fileWorker::startListen()
     bool status = fileServer->listen(QHostAddress(IP),PORT.toInt());
 
     if(status)
-        currentListenType = Listen;
+        currentListenType = LT_LISTEN;
     else
-        currentListenType = Unlisten;
+        currentListenType = LT_UNLISTEN;
 
     return status;
 }
@@ -41,7 +41,7 @@ bool fileWorker::startListen()
 void fileWorker::stopWorker()
 {
     fileServer->close();
-    currentListenType = Unlisten;
+    currentListenType = LT_UNLISTEN;
 }
 
 bool fileWorker::setSendFile(QString path)
@@ -53,19 +53,19 @@ bool fileWorker::setSendFile(QString path)
         {
             filePath = path;
             sendFileName = path.right(path.size()-path.lastIndexOf('/')-1);
-            emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
+            emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
             sendTimes = 0;
             sendFileBlock.clear();
             return true;
         }
         else
         {
-            emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File %1 Read Fail").arg(sendFileName));
+            emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File %1 Read Fail").arg(sendFileName));
         }
     }
     else
     {
-        emit messageShowReady(chatWorker::System,tr("System"),tr(" -- Invaild File Path Info: %1").arg(path));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- Invaild File Path Info: %1").arg(path));
     }
     return false;
 }
@@ -79,12 +79,12 @@ void fileWorker::setArgs(QString ip, QString port)
 void fileWorker::acceptConnection()
 {
     receiveFileTotalSize = receiveFileTransSize = 0;
-    emit messageShowReady(chatWorker::System,tr("System"),tr(" -- New File Arriving"));
+    emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- New File Arriving"));
 
     receiveSocket = fileServer->nextPendingConnection();
     connect(receiveSocket,SIGNAL(readyRead()),this,SLOT(readConnection()));
 
-    emit progressBarUpdateReady(Show,0); // 显示文件传输进度条
+    emit progressBarUpdateReady(UT_SHOW,0); // 显示文件传输进度条
 }
 
 void fileWorker::readConnection()
@@ -94,7 +94,7 @@ void fileWorker::readConnection()
         QDataStream in(receiveSocket);
         in>>receiveFileTotalSize>>receiveFileTransSize>>receiveFileName;
 
-        emit progressBarUpdateReady(SetMax,receiveFileTotalSize);
+        emit progressBarUpdateReady(UT_SETMAX,receiveFileTotalSize);
 
         QString name = receiveFileName.mid(0,receiveFileName.lastIndexOf("."));
         QString suffix = receiveFileName.mid(receiveFileName.lastIndexOf(".")+1,receiveFileName.size());
@@ -128,14 +128,14 @@ void fileWorker::readConnection()
 
         receiveFile->open(QFile::ReadWrite);
 
-        emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
     }
     else
     {
         receiveFileBlock = receiveSocket->readAll();
         receiveFileTransSize += receiveFileBlock.size();
 
-        emit progressBarUpdateReady(SetValue,receiveFileTransSize);
+        emit progressBarUpdateReady(UT_SETVALUE,receiveFileTransSize);
 
         receiveFile->write(receiveFileBlock);
         receiveFile->flush();
@@ -143,7 +143,7 @@ void fileWorker::readConnection()
 
     if(receiveFileTransSize == receiveFileTotalSize) // 文件传输完成
     {
-        emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File Transmission Complete"));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete"));
 
         QMessageBox::StandardButton choice;
         choice = QMessageBox::information(nullptr,tr("Open File Folder?"),tr("Open File Folder?"),QMessageBox::Yes,QMessageBox::No);
@@ -163,7 +163,7 @@ void fileWorker::readConnection()
 
         receiveFileTotalSize = receiveFileTransSize = 0;
         receiveFileName = QString::null;
-        emit progressBarUpdateReady(Hide,0);
+        emit progressBarUpdateReady(UT_HIDE,0);
         receiveFile->close();
     }
 }
@@ -197,11 +197,11 @@ void fileWorker::sendFileInfo()
 
     sendSocket->write(sendFileBlock);
 
-    emit progressBarUpdateReady(SetMax,sendFileTotalSize);
-    emit progressBarUpdateReady(SetValue,0);
-    emit progressBarUpdateReady(Show,0);
+    emit progressBarUpdateReady(UT_SETMAX,sendFileTotalSize);
+    emit progressBarUpdateReady(UT_SETVALUE,0);
+    emit progressBarUpdateReady(UT_SHOW,0);
 
-    emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
+    emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
 }
 
 void fileWorker::continueToSend(qint64 size)
@@ -209,7 +209,7 @@ void fileWorker::continueToSend(qint64 size)
     if(sendSocket->state() != QAbstractSocket::ConnectedState) // 网络出错
     {
         QMessageBox::information(nullptr,tr("ERROR"),tr("Network Error"),QMessageBox::Yes);
-        emit progressBarUpdateReady(Hide,0);
+        emit progressBarUpdateReady(UT_HIDE,0);
         return;
     }
 
@@ -217,11 +217,11 @@ void fileWorker::continueToSend(qint64 size)
 
     if(sendFileLeftSize == 0) // 文件发送完成
     {
-        emit messageShowReady(chatWorker::System,tr("System"),tr(" -- File Transmission Complete"));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete"));
 
         sendSocket->disconnectFromHost();
 
-        emit progressBarUpdateReady(Hide,0);
+        emit progressBarUpdateReady(UT_HIDE,0);
 
         sendFile->close();
 
@@ -237,6 +237,6 @@ void fileWorker::continueToSend(qint64 size)
 
         sendSocket->write(sendFileBlock);
 
-        emit progressBarUpdateReady(SetValue,sendFileTotalSize - sendFileLeftSize);
+        emit progressBarUpdateReady(UT_SETVALUE,sendFileTotalSize - sendFileLeftSize);
     }
 }

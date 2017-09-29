@@ -7,7 +7,7 @@
 #include "hintwidget.h"
 
 #include <QMainWindow>
-
+#include <QListWidgetItem>
 
 namespace Ui {
 class MainWindow;
@@ -55,6 +55,7 @@ private slots:
     void click_btnListen();
     void click_btnSendFile();
 
+    void updateFinalIP(QListWidgetItem*);
 };
 
 #endif // MAINWINDOW_H

@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QPropertyAnimation>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -31,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(click_btnSendFile()));
     connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(click_btnChooseFile()));
     connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(click_btnSendMessage()));
+
+    connect(ui->listOnlineUser,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(updateFinalIP(QListWidgetItem*)));
 
     ui->labIPAdress->setText(Tools::getLocalIP());
     ui->edtFinalIP->setText(DEFAULT_FILE_IP);
@@ -312,3 +315,12 @@ void MainWindow::click_btnSendFile()
     file->startSend();
 }
 
+void MainWindow::updateFinalIP(QListWidgetItem * arg)
+{
+    QString text = arg->text();
+    QRegularExpression pattern("((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)");
+    QRegularExpressionMatch result = pattern.match(text);
+
+    if(result.hasMatch())
+        ui->edtFinalIP->setText(result.captured(0));
+}

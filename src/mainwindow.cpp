@@ -322,5 +322,12 @@ void MainWindow::updateFinalIP(QListWidgetItem * arg)
     QRegularExpressionMatch result = pattern.match(text);
 
     if(result.hasMatch())
+    {
         ui->edtFinalIP->setText(result.captured(0));
+        hint->setText(tr("Choose Online User: ")+text);
+    }
+    else
+    {
+        hint->setText(tr("Insignificant information: ")+text);
+    }
 }

@@ -1,4 +1,5 @@
 #include "fileworker.h"
+#include "tools.h"
 
 #include <QFileDialog>
 #include <QDataStream>
@@ -53,7 +54,14 @@ bool fileWorker::setSendFile(QString path)
         {
             filePath = path;
             sendFileName = path.right(path.size()-path.lastIndexOf('/')-1);
-            emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
+
+            float number;
+            QString unit;
+            if( Tools::getTransformFileSize(sendFile->size(),number,unit) )
+                emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Selete: %1 Size: %2 %3").arg(sendFileName,QString::number(number),unit));
+            else
+                emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Selete: %1").arg(sendFileName));
+
             sendTimes = 0;
             sendFileBlock.clear();
             return true;

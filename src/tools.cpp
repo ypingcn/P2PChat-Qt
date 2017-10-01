@@ -44,3 +44,40 @@ bool Tools::vaildNickName(QString name)
         return true;
     return false;
 }
+
+bool Tools::getTransformFileSize(qint64 originNumber,float& newNumber,QString& newUnit)
+{
+    if(originNumber <=0)
+        return false;
+
+    QString units[7] = {
+        "Bytes",
+        "KB",
+        "MB",
+        "GB",
+        "TB",
+        "EB",
+        "PB"
+    };
+
+    const qint64 RATE = 1000;
+    qint64 tmp = originNumber;
+
+    int i = 0;
+    while(tmp > 1000 && i <= 5)
+    {
+        i++;
+        tmp /= RATE;
+    }
+
+    newUnit = units[i];
+
+    tmp = 1;
+    while(i)
+    {
+        tmp *= RATE;
+        i--;
+    }
+    newNumber = originNumber * 1.0/ tmp;
+    return true;
+}

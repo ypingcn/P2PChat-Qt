@@ -7,5 +7,7 @@
         <file>icons/logout.png</file>
         <file>icons/message.png</file>
         <file>icons/listen.png</file>
+        <file>avatars.png</file>
+        <file>p2pchat-qt.png</file>
     </qresource>
 </RCC>

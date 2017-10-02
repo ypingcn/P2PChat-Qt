@@ -82,22 +82,44 @@ void MainWindow::setLanguage()
 void MainWindow::getHelp()
 {
     QDialog * help = new QDialog(this);
-    QVBoxLayout * helpLayout = new QVBoxLayout(help);
+    QGridLayout * helpLayout = new QGridLayout(help);
+
+    QPixmap pic_avatar(":avatars.png");
+    QPixmap pic_icon(":p2pchat-qt.png");
+    QLabel * avatar = new QLabel();
+    QLabel * icon = new QLabel();
+    avatar->setPixmap(pic_avatar);
+    icon->setPixmap(pic_icon);
 
     if(QObject::sender() == ui->actionAbout)
     {
         help->setWindowTitle(tr("About"));
-        QLabel * content = new QLabel();
-        QString website = "<a href=\"https://github.com/ypingcn/P2PChat-Qt\">" + tr("click to know more.") + "</a>";
-        content->setText(tr("A simple program designed for LAN chat.")+website);
+        help->resize(600,300);
+        QTextBrowser * content = new QTextBrowser();
         content->setOpenExternalLinks(true);
-        helpLayout->addWidget(content);
+
+        content->append(tr("A simple program designed for LAN chat."));
+        content->append(tr("\nFunction:"));
+        content->append(tr("1. send text message in LAN"));
+        content->append(tr("2. send file in LAN"));
+        content->append(tr("\nYou can switch language or get more help from menubar."));
+        content->append(tr("<a href=\"https://github.com/ypingcn/P2PChat-Qt\"> %1 </a>").arg(tr("click to know more.")));
+        content->append(tr("\nThe program is licensed under version 3 of the GNU General Public License."));
+        content->append(tr("Copyright 2017 ypingcn"));
+
+
+        helpLayout->addWidget(avatar,0,0,1,1);
+        helpLayout->addWidget(icon,1,0,1,1);
+        helpLayout->addWidget(content,0,1,2,1);
     }
     else if(QObject::sender() == ui->actionHelp)
     {
         help->setWindowTitle(tr("Help"));
-        QTextEdit * content = new QTextBrowser();
-        help->resize(600,380);
+        help->resize(600,450);
+
+        QTextBrowser * content = new QTextBrowser();
+        content->setOpenExternalLinks(true);
+
         content->append(tr("P2PChat-Qt Help"));
         content->append(tr("\n --- Nick Name Help"));
         content->append(tr("Valid character include : numbers , alphabet ( lower-case and upper-case ) , underline and simplified chinese character."));
@@ -111,8 +133,14 @@ void MainWindow::getHelp()
         content->append(tr("#127.0.0.1 is Presentation mode, you should input the destination IP instead.( As OnlineUsers shows )"));
         content->append(tr("Number in the second blank should be a number ranged between 1 and 65535"));
         content->append(tr("Port number don't recommand to change unless the two clients use the same port for file transmisson."));
+        content->append(tr("\n --- Button Help"));
         content->append(tr("'Listen' means I am ready to get the file."));
-        helpLayout->addWidget(content);
+        content->append(tr("'Choose' means to select a file to send to other user."));
+        content->append(tr("'Send' means begin to send file.if configuration wrong or bad network,you will see a hint."));
+
+        helpLayout->addWidget(avatar,0,0,1,1);
+        helpLayout->addWidget(icon,1,0,1,1);
+        helpLayout->addWidget(content,0,1,2,1);
     }
 
     help->exec();

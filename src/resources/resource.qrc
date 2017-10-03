@@ -9,5 +9,10 @@
         <file>icons/listen.png</file>
         <file>avatars.png</file>
         <file>p2pchat-qt.png</file>
+        <file>theme/black.qss</file>
+        <file>theme/blue.qss</file>
+        <file>theme/green.qss</file>
+        <file>theme/pink.qss</file>
+        <file>theme/red.qss</file>
     </qresource>
 </RCC>

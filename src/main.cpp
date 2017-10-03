@@ -9,12 +9,18 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QFile qss(":/theme/default.qss"); // 加载主题
-    qss.open(QFile::ReadOnly);
-    qApp->setStyleSheet(qss.readAll());
+    QSettings settings("ypingcn","p2pchat-qt");
+
+    if(!settings.contains("p2pchat-qt-theme"))
+        settings.setValue("p2pchat-qt-theme","default");
+
+
+    QFile qss(":/theme/"+settings.value("p2pchat-qt-theme").toString()+".qss"); // 加载主题
+    if( qss.open(QFile::ReadOnly) )
+        qApp->setStyleSheet(qss.readAll());
     qss.close();
 
-    QSettings settings("ypingcn","p2pchat-qt");
+
     if(!settings.contains("p2pchat-qt-lang"))
         settings.setValue("p2pchat-qt-lang","zh-cn");
 

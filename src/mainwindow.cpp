@@ -18,10 +18,15 @@ MainWindow::MainWindow(QWidget *parent) :
     hint->resize(ui->browserMessage->width(),32);
     hint->hide();
 
-
     connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionTraditionalChinese,&QAction::triggered,this,&MainWindow::setLanguage);
+
+    connect(ui->actionBlack,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionBlue,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionGreen,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionPink,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionRed,&QAction::triggered,this,&MainWindow::setTheme);
 
     connect(ui->actionHelp,&QAction::triggered,this,&MainWindow::getHelp);
     connect(ui->actionAbout,&QAction::triggered,this,&MainWindow::getHelp);
@@ -77,6 +82,41 @@ void MainWindow::setLanguage()
         settings.setValue("p2pchat-qt-lang","zh-tw");
 
     hint->setText(tr("Restart the app to switch language"));
+}
+
+void MainWindow::setTheme(void)
+{
+    QSettings settings("ypingcn","p2pchat-qt");
+
+    QString name;
+
+    if(QObject::sender() == ui->actionBlack)
+    {
+        settings.setValue("p2pchat-qt-theme","black");
+        name = "Black";
+    }
+    else if(QObject::sender() == ui->actionBlue)
+    {
+        settings.setValue("p2pchat-qt-theme","blue");
+        name = "Blue";
+    }
+    else if(QObject::sender() == ui->actionGreen)
+    {
+        settings.setValue("p2pchat-qt-theme","green");
+        name = "Green";
+    }
+    else if(QObject::sender() == ui->actionPink)
+    {
+        settings.setValue("p2pchat-qt-theme","pink");
+        name = "Pink";
+    }
+    else if(QObject::sender() == ui->actionRed)
+    {
+        settings.setValue("p2pchat-qt-theme","red");
+        name = "Red";
+    }
+
+    hint->setText(tr("Restart the app to switch to theme: %1").arg(name));
 }
 
 void MainWindow::getHelp()

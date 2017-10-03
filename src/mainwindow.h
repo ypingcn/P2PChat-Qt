@@ -33,6 +33,7 @@ private:
     void setLocalUserEnable(bool status); // 改变用户登录状态
     void setLocalFileEnable(bool status); // 改变文件传输按钮可用性
     void setLanguage(void); // 设置界面语言
+    void setTheme(void); // 设置程序主题
     void setWidgetState(WidgetState state);
     void getHelp(void);// 帮助界面
 

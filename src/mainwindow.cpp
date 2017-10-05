@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QDesktopServices>
 #include <QPropertyAnimation>
 #include <QRegularExpression>
@@ -379,8 +380,23 @@ void MainWindow::click_btnListen()
 
 void MainWindow::click_btnSendFile()
 {
-    file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
-    file->startSend();
+    fileWorker::listen_t listenType = file->status();
+    if(listenType == fileWorker::LT_LISTEN && (ui->edtFinalIP->text() == DEFAULT_FILE_IP || ui->edtFinalIP->text() == Tools::getLocalIP()))
+    {
+        QMessageBox::StandardButton choice;
+        choice =  QMessageBox::information(this,tr("Warnning"),tr("If continue,you will receive the file from yourself,comfirm?"),QMessageBox::Yes,QMessageBox::No);
+        if(choice == QMessageBox::Yes)
+        {
+            file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
+            file->startSend();
+        }
+    }
+    else
+    {
+        file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
+        file->startSend();
+    }
+
 }
 
 void MainWindow::updateFinalIP(QListWidgetItem * arg)

@@ -136,7 +136,12 @@ void fileWorker::readConnection()
 
         receiveFile->open(QFile::ReadWrite);
 
-        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(receiveFileName,QString::number(receiveFileTotalSize)));
+        float number;
+        QString unit;
+        if( Tools::getTransformFileSize(receiveFileTotalSize,number,unit) )
+            emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Arrived: %1 Size: %2 %3").arg(receiveFileName,QString::number(number),unit));
+        else
+            emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Arrived: %1").arg(receiveFileName));
     }
     else
     {
@@ -151,7 +156,7 @@ void fileWorker::readConnection()
 
     if(receiveFileTransSize == receiveFileTotalSize) // 文件传输完成
     {
-        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete"));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete(Receiver)"));
 
         QMessageBox::StandardButton choice;
         choice = QMessageBox::information(nullptr,tr("Open File Folder?"),tr("Open File Folder?"),QMessageBox::Yes,QMessageBox::No);
@@ -209,7 +214,13 @@ void fileWorker::sendFileInfo()
     emit progressBarUpdateReady(UT_SETVALUE,0);
     emit progressBarUpdateReady(UT_SHOW,0);
 
-    emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Name: %1 File Size: %2").arg(sendFileName,QString::number(sendFileTotalSize)));
+
+    float number;
+    QString unit;
+    if( Tools::getTransformFileSize(sendFile->size(),number,unit) )
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Send: %1 File Size: %2 %3").arg(sendFileName,QString::number(number),unit));
+    else
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Send: %1 ").arg(sendFileName));
 }
 
 void fileWorker::continueToSend(qint64 size)
@@ -225,7 +236,7 @@ void fileWorker::continueToSend(qint64 size)
 
     if(sendFileLeftSize == 0) // 文件发送完成
     {
-        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete"));
+        emit messageShowReady(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Transmission Complete(Sender)"));
 
         sendSocket->disconnectFromHost();
 

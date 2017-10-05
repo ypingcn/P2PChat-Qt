@@ -93,27 +93,27 @@ void MainWindow::setTheme(void)
     if(QObject::sender() == ui->actionBlack)
     {
         settings.setValue("p2pchat-qt-theme","black");
-        name = "Black";
+        name = tr("Black");
     }
     else if(QObject::sender() == ui->actionBlue)
     {
         settings.setValue("p2pchat-qt-theme","blue");
-        name = "Blue";
+        name = tr("Blue");
     }
     else if(QObject::sender() == ui->actionGreen)
     {
         settings.setValue("p2pchat-qt-theme","green");
-        name = "Green";
+        name = tr("Green");
     }
     else if(QObject::sender() == ui->actionPink)
     {
         settings.setValue("p2pchat-qt-theme","pink");
-        name = "Pink";
+        name = tr("Pink");
     }
     else if(QObject::sender() == ui->actionRed)
     {
         settings.setValue("p2pchat-qt-theme","red");
-        name = "Red";
+        name = tr("Red");
     }
 
     hint->setText(tr("Restart the app to switch to theme: %1").arg(name));

@@ -171,7 +171,8 @@
         <location filename="../mainwindow.cpp" line="143"/>
         <source>
 Function:</source>
-        <translation>功能：</translation>
+        <translation>
+功能：</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="144"/>
@@ -187,7 +188,8 @@ Function:</source>
         <location filename="../mainwindow.cpp" line="146"/>
         <source>
 You can switch language or get more help from menubar.</source>
-        <translation>\n在菜單欄裏切換語言或者得到更多的使用幫助。</translation>
+        <translation>
+在菜單欄裏切換語言或者得到更多的使用幫助。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="147"/>
@@ -198,7 +200,8 @@ You can switch language or get more help from menubar.</source>
         <location filename="../mainwindow.cpp" line="148"/>
         <source>
 The program is licensed under version 3 of the GNU General Public License.</source>
-        <translation>基於 GNU GPLv3 授權程序。</translation>
+        <translation>
+基於 GNU GPLv3 授權程序。</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="149"/>
@@ -280,7 +283,8 @@ The program is licensed under version 3 of the GNU General Public License.</sour
         <location filename="../mainwindow.cpp" line="177"/>
         <source>
  --- Button Help</source>
-        <translation>\n --- 按钮帮助</translation>
+        <translation>
+ --- 按钮帮助</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="178"/>

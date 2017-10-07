@@ -1,0 +1,63 @@
+QMainWindow,QMessageBox{
+       background: rgb(248, 248, 255);
+       border: none;
+}
+
+QTextBrowser,QListWidget,QLineEdit:enabled,QTextEdit:enabled {
+        border-radius: 4px;
+        height: 25px;
+        border: 1px solid rgb(255, 99, 71);
+        background: white;
+}
+
+QLineEdit:!enabled,QTextEdit:!enabled{
+        border-radius: 4px;
+        height: 25px;
+        border: 1px solid rgb(255, 99, 71);
+        background: rgb(240, 240, 240);
+}
+
+QComboBox {
+        height: 25px;
+        min-width: 100px;
+        border-radius: 4px;
+        border: 1px solid rgb(255, 99, 71);
+        background: white;
+}
+
+QComboBox QAbstractItemView {
+        selection-background-color: white;
+        selection-color: rgb(0, 0, 0);
+}
+
+QPushButton:enabled {
+        color: white;
+        border: none;
+        background: rgb(139, 26, 26);
+        height: 25px;
+        min-width: 70px;
+        border-radius: 4px;
+        padding-left: 5px;
+        padding-right: 5px;
+}
+
+QPushButton:!enabled {
+        color: white;
+        border: none;
+        background: rgb(255, 99, 71);
+        height: 25px;
+        min-width: 70px;
+        border-radius: 4px;
+        padding-left: 5px;
+        padding-right: 5px;
+}
+
+QWidget#hintWidget {
+        border-radius: 4px;
+        border: 1px solid rgb(255, 99, 71);
+        background: rgb(255, 99, 71);
+}
+QLabel#hintContent {
+        color: white;
+        background: rgba(255, 99, 71, 80%);
+}

@@ -12,23 +12,23 @@ public:
 
     explicit chatWorker(QObject *parent = 0);
 
-    enum MessageType{Chat,Login,Logout,Involved,System};  //聊天、登录、退出、在线、系统信息
-    enum StatusType{Online,Offline};
+    enum message_t{MT_CHAT,MT_LOGIN,MT_LOGOUT,MT_INVOLVE,MT_SYSTEM};  //聊天、登录、退出、在线、系统信息
+    enum status_t{ST_ONLINE,ST_OFFLINE};
 
     void setMask(QString mask) { MASK = mask; }
-    void setStatus(StatusType status) { currentStatusType = status; }
+    void setStatus(status_t status) { currentStatusType = status; }
     void setUserName(QString name) { USER_NAME = name; }
 
-    StatusType status() { return currentStatusType; }
+    status_t status() { return currentStatusType; }
 
-    void sendJson(MessageType type, QString nick_name, QString content="");
+    void sendJson(message_t type, QString nick_name, QString content="");
 
 private:
 
     QString MASK;
     QString USER_NAME;
 
-    StatusType currentStatusType;
+    status_t currentStatusType;
 
     QSet<QString> onlineUsersSet;
 
@@ -37,7 +37,7 @@ private:
 
 signals:
 
-    void messageShowReady(chatWorker::MessageType type, QString hint, QString content);
+    void messageShowReady(chatWorker::message_t type, QString hint, QString content);
     void onlineUsersUpdateReady(QSet<QString> set);
 
 private slots:

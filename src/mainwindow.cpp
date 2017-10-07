@@ -4,8 +4,10 @@
 #include <QDateTime>
 #include <QSettings>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QDesktopServices>
 #include <QPropertyAnimation>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -17,10 +19,15 @@ MainWindow::MainWindow(QWidget *parent) :
     hint->resize(ui->browserMessage->width(),32);
     hint->hide();
 
-
     connect(ui->actionEnglish,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionSimplifiedChinese,&QAction::triggered,this,&MainWindow::setLanguage);
     connect(ui->actionTraditionalChinese,&QAction::triggered,this,&MainWindow::setLanguage);
+
+    connect(ui->actionBlack,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionBlue,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionGreen,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionPink,&QAction::triggered,this,&MainWindow::setTheme);
+    connect(ui->actionRed,&QAction::triggered,this,&MainWindow::setTheme);
 
     connect(ui->actionHelp,&QAction::triggered,this,&MainWindow::getHelp);
     connect(ui->actionAbout,&QAction::triggered,this,&MainWindow::getHelp);
@@ -31,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(click_btnSendFile()));
     connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(click_btnChooseFile()));
     connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(click_btnSendMessage()));
+
+    connect(ui->listOnlineUser,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(updateFinalIP(QListWidgetItem*)));
 
     ui->labIPAdress->setText(Tools::getLocalIP());
     ui->edtFinalIP->setText(DEFAULT_FILE_IP);
@@ -47,19 +56,19 @@ MainWindow::MainWindow(QWidget *parent) :
     file = new fileWorker;
     chat = new chatWorker;
 
-    connect(file,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
-            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
-    connect(file,SIGNAL(progressBarUpdateReady(fileWorker::UpdateType,qint64)),
-            this,SLOT(updateProgressBar(fileWorker::UpdateType,qint64)) );
-    connect(chat,SIGNAL(messageShowReady(chatWorker::MessageType,QString,QString)),
-            this,SLOT(showMessage(chatWorker::MessageType,QString,QString)) );
+    connect(file,SIGNAL(messageShowReady(chatWorker::message_t,QString,QString)),
+            this,SLOT(showMessage(chatWorker::message_t,QString,QString)) );
+    connect(file,SIGNAL(progressBarUpdateReady(fileWorker::update_t,qint64)),
+            this,SLOT(updateProgressBar(fileWorker::update_t,qint64)) );
+    connect(chat,SIGNAL(messageShowReady(chatWorker::message_t,QString,QString)),
+            this,SLOT(showMessage(chatWorker::message_t,QString,QString)) );
     connect(chat,SIGNAL(onlineUsersUpdateReady(QSet<QString>)),
             this,SLOT(updateOnlineUsers(QSet<QString>)) );
 }
 
 MainWindow::~MainWindow()
 {
-    chat->sendJson(chatWorker::Logout,ui->edtName->text()); // 销毁对象前先退出
+    chat->sendJson(chatWorker::MT_LOGOUT,ui->edtName->text()); // 销毁对象前先退出
     delete ui;
 }
 void MainWindow::setLanguage()
@@ -76,25 +85,82 @@ void MainWindow::setLanguage()
     hint->setText(tr("Restart the app to switch language"));
 }
 
+void MainWindow::setTheme(void)
+{
+    QSettings settings("ypingcn","p2pchat-qt");
+
+    QString name;
+
+    if(QObject::sender() == ui->actionBlack)
+    {
+        settings.setValue("p2pchat-qt-theme","black");
+        name = tr("Black");
+    }
+    else if(QObject::sender() == ui->actionBlue)
+    {
+        settings.setValue("p2pchat-qt-theme","blue");
+        name = tr("Blue");
+    }
+    else if(QObject::sender() == ui->actionGreen)
+    {
+        settings.setValue("p2pchat-qt-theme","green");
+        name = tr("Green");
+    }
+    else if(QObject::sender() == ui->actionPink)
+    {
+        settings.setValue("p2pchat-qt-theme","pink");
+        name = tr("Pink");
+    }
+    else if(QObject::sender() == ui->actionRed)
+    {
+        settings.setValue("p2pchat-qt-theme","red");
+        name = tr("Red");
+    }
+
+    hint->setText(tr("Restart the app to switch to theme: %1").arg(name));
+}
+
 void MainWindow::getHelp()
 {
     QDialog * help = new QDialog(this);
-    QVBoxLayout * helpLayout = new QVBoxLayout(help);
+    QGridLayout * helpLayout = new QGridLayout(help);
+
+    QPixmap pic_avatar(":avatars.png");
+    QPixmap pic_icon(":p2pchat-qt.png");
+    QLabel * avatar = new QLabel();
+    QLabel * icon = new QLabel();
+    avatar->setPixmap(pic_avatar);
+    icon->setPixmap(pic_icon);
 
     if(QObject::sender() == ui->actionAbout)
     {
         help->setWindowTitle(tr("About"));
-        QLabel * content = new QLabel();
-        QString website = "<a href=\"https://github.com/ypingcn/P2PChat-Qt\">" + tr("click to know more.") + "</a>";
-        content->setText(tr("A simple program designed for LAN chat.")+website);
+        help->resize(600,300);
+        QTextBrowser * content = new QTextBrowser();
         content->setOpenExternalLinks(true);
-        helpLayout->addWidget(content);
+
+        content->append(tr("A simple program designed for LAN chat."));
+        content->append(tr("\nFunction:"));
+        content->append(tr("1. send text message in LAN"));
+        content->append(tr("2. send file in LAN"));
+        content->append(tr("\nYou can switch language or get more help from menubar."));
+        content->append(tr("<a href=\"https://github.com/ypingcn/P2PChat-Qt\"> %1 </a>").arg(tr("click to know more.")));
+        content->append(tr("\nThe program is licensed under version 3 of the GNU General Public License."));
+        content->append(tr("Copyright 2017 ypingcn"));
+
+
+        helpLayout->addWidget(avatar,0,0,1,1);
+        helpLayout->addWidget(icon,1,0,1,1);
+        helpLayout->addWidget(content,0,1,2,1);
     }
     else if(QObject::sender() == ui->actionHelp)
     {
         help->setWindowTitle(tr("Help"));
-        QTextEdit * content = new QTextBrowser();
-        help->resize(600,380);
+        help->resize(600,450);
+
+        QTextBrowser * content = new QTextBrowser();
+        content->setOpenExternalLinks(true);
+
         content->append(tr("P2PChat-Qt Help"));
         content->append(tr("\n --- Nick Name Help"));
         content->append(tr("Valid character include : numbers , alphabet ( lower-case and upper-case ) , underline and simplified chinese character."));
@@ -108,24 +174,30 @@ void MainWindow::getHelp()
         content->append(tr("#127.0.0.1 is Presentation mode, you should input the destination IP instead.( As OnlineUsers shows )"));
         content->append(tr("Number in the second blank should be a number ranged between 1 and 65535"));
         content->append(tr("Port number don't recommand to change unless the two clients use the same port for file transmisson."));
+        content->append(tr("\n --- Button Help"));
         content->append(tr("'Listen' means I am ready to get the file."));
-        helpLayout->addWidget(content);
+        content->append(tr("'Choose' means to select a file to send to other user."));
+        content->append(tr("'Send' means begin to send file.if configuration wrong or bad network,you will see a hint."));
+
+        helpLayout->addWidget(avatar,0,0,1,1);
+        helpLayout->addWidget(icon,1,0,1,1);
+        helpLayout->addWidget(content,0,1,2,1);
     }
 
     help->exec();
 
 }
 
-void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString content)
+void MainWindow::showMessage(chatWorker::message_t type, QString hint, QString content)
 {
     QDateTime now = QDateTime::currentDateTime();
-    if(type == chatWorker::Login || type == chatWorker::Logout || type == chatWorker::System)
+    if(type == chatWorker::MT_LOGIN || type == chatWorker::MT_LOGOUT || type == chatWorker::MT_SYSTEM)
     {
         ui->browserMessage->setTextColor(QColor(190,190,190));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
         ui->browserMessage->append(content);
     }
-    else if(type == chatWorker::Chat)
+    else if(type == chatWorker::MT_CHAT)
     {
         ui->browserMessage->setTextColor(QColor(70,130,180));
         ui->browserMessage->append(hint + now.toString("  hh:mm:ss"));
@@ -134,15 +206,15 @@ void MainWindow::showMessage(chatWorker::MessageType type, QString hint, QString
     }
 }
 
-void MainWindow::updateProgressBar(fileWorker::UpdateType type,qint64 number)
+void MainWindow::updateProgressBar(fileWorker::update_t type,qint64 number)
 {
-    if(type == fileWorker::Show)
+    if(type == fileWorker::UT_SHOW)
         ui->ProgressBar->show();
-    else if(type == fileWorker::Hide)
+    else if(type == fileWorker::UT_HIDE)
         ui->ProgressBar->hide();
-    else if(type == fileWorker::SetValue)
+    else if(type == fileWorker::UT_SETVALUE)
         ui->ProgressBar->setValue(number);
-    else if(type == fileWorker::SetMax)
+    else if(type == fileWorker::UT_SETMAX)
         ui->ProgressBar->setMaximum(number);
 }
 
@@ -224,7 +296,7 @@ void MainWindow::click_btnSendMessage()
     else
     {
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Chat,ui->edtName->text(),ui->edtMessage->toPlainText());
+        chat->sendJson(chatWorker::MT_CHAT,ui->edtName->text(),ui->edtMessage->toPlainText());
         ui->edtMessage->clear();
     }
 }
@@ -246,8 +318,8 @@ void MainWindow::click_btnLogin()
         ui->btnListen->setEnabled(true);
         ui->labIPAdress->setText(Tools::getLocalIP());
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Login,ui->edtName->text());
-        chat->setStatus(chatWorker::Online);
+        chat->sendJson(chatWorker::MT_LOGIN,ui->edtName->text());
+        chat->setStatus(chatWorker::ST_OFFLINE);
         chat->setUserName(ui->edtName->text());
     }
 }
@@ -264,8 +336,8 @@ void MainWindow::click_btnLogout()
         setWidgetState(Remove);
 
         chat->setMask(ui->boxMask->currentText());
-        chat->sendJson(chatWorker::Logout,ui->edtName->text());
-        chat->setStatus(chatWorker::Offline);
+        chat->sendJson(chatWorker::MT_LOGOUT,ui->edtName->text());
+        chat->setStatus(chatWorker::ST_OFFLINE);
     }
 
 }
@@ -282,33 +354,64 @@ void MainWindow::click_btnChooseFile()
 
 void MainWindow::click_btnListen()
 {
-    fileWorker::ListenType listenType = file->status();
+    fileWorker::listen_t listenType = file->status();
 
-    if(listenType == fileWorker::Unlisten)
+    if(listenType == fileWorker::LT_UNLISTEN)
     {
         file->setArgs(ui->edtFinalIP->text(), ui->edtFinalPort->text());
         if( file->startListen() )
         {
             ui->btnListen->setText(tr("UnListen"));
-            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening"));
+            showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening"));
         }
         else
         {
-            showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Fail"));
+            showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening Fail"));
         }
 
     }
-    else if(listenType == fileWorker::Listen)
+    else if(listenType == fileWorker::LT_LISTEN)
     {
         ui->btnListen->setText(tr("Listen"));
         file->stopWorker();
-        showMessage(chatWorker::System,tr("System"),tr(" -- File Port Listening Closed"));
+        showMessage(chatWorker::MT_SYSTEM,tr("System"),tr(" -- File Port Listening Closed"));
     }
 }
 
 void MainWindow::click_btnSendFile()
 {
-    file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
-    file->startSend();
+    fileWorker::listen_t listenType = file->status();
+    if(listenType == fileWorker::LT_LISTEN && (ui->edtFinalIP->text() == DEFAULT_FILE_IP || ui->edtFinalIP->text() == Tools::getLocalIP()))
+    {
+        QMessageBox::StandardButton choice;
+        choice =  QMessageBox::information(this,tr("Warnning"),tr("If continue,you will receive the file from yourself,comfirm?"),QMessageBox::Yes,QMessageBox::No);
+        if(choice == QMessageBox::Yes)
+        {
+            file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
+            file->startSend();
+        }
+    }
+    else
+    {
+        file->setArgs(ui->edtFinalIP->text(),ui->edtFinalPort->text());
+        file->startSend();
+    }
+
 }
 
+void MainWindow::updateFinalIP(QListWidgetItem * arg)
+{
+    QString text = arg->text();
+    QRegularExpression pattern("((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)");
+    QRegularExpressionMatch result = pattern.match(text);
+
+    if(result.hasMatch())
+    {
+        ui->edtFinalIP->setText(result.captured(0));
+        hint->setText(tr("Choose Online User: ")+text);
+    }
+    else
+    {
+        hint->setText(tr("Insignificant information: ")+text);
+    }
+}

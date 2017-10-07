@@ -343,7 +343,18 @@
      <addaction name="actionSimplifiedChinese"/>
      <addaction name="actionTraditionalChinese"/>
     </widget>
+    <widget class="QMenu" name="menuTheme_2">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="actionBlue"/>
+     <addaction name="actionBlack"/>
+     <addaction name="actionGreen"/>
+     <addaction name="actionPink"/>
+     <addaction name="actionRed"/>
+    </widget>
     <addaction name="menuLanguage"/>
+    <addaction name="menuTheme_2"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -379,6 +390,31 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionBlue">
+   <property name="text">
+    <string>Blue</string>
+   </property>
+  </action>
+  <action name="actionBlack">
+   <property name="text">
+    <string>Black</string>
+   </property>
+  </action>
+  <action name="actionGreen">
+   <property name="text">
+    <string>Green</string>
+   </property>
+  </action>
+  <action name="actionPink">
+   <property name="text">
+    <string>Pink</string>
+   </property>
+  </action>
+  <action name="actionRed">
+   <property name="text">
+    <string>Red</string>
    </property>
   </action>
  </widget>

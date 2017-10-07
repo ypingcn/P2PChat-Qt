@@ -7,7 +7,7 @@
 #include "hintwidget.h"
 
 #include <QMainWindow>
-
+#include <QListWidgetItem>
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +33,7 @@ private:
     void setLocalUserEnable(bool status); // 改变用户登录状态
     void setLocalFileEnable(bool status); // 改变文件传输按钮可用性
     void setLanguage(void); // 设置界面语言
+    void setTheme(void); // 设置程序主题
     void setWidgetState(WidgetState state);
     void getHelp(void);// 帮助界面
 
@@ -43,8 +44,8 @@ private:
 
 private slots:
 
-    void showMessage(chatWorker::MessageType type,QString hint,QString content); // 将接收到或自身的信息显示到内容框内
-    void updateProgressBar(fileWorker::UpdateType type, qint64 number);
+    void showMessage(chatWorker::message_t type,QString hint,QString content); // 将接收到或自身的信息显示到内容框内
+    void updateProgressBar(fileWorker::update_t type, qint64 number);
     void updateOnlineUsers(QSet<QString> set);
 
     void click_btnSendMessage();
@@ -55,6 +56,7 @@ private slots:
     void click_btnListen();
     void click_btnSendFile();
 
+    void updateFinalIP(QListWidgetItem*);
 };
 
 #endif // MAINWINDOW_H

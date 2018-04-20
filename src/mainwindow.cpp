@@ -146,7 +146,7 @@ void MainWindow::getHelp()
         content->append(tr("\nYou can switch language or get more help from menubar."));
         content->append(tr("<a href=\"https://github.com/ypingcn/P2PChat-Qt\"> %1 </a>").arg(tr("click to know more.")));
         content->append(tr("\nThe program is licensed under version 3 of the GNU General Public License."));
-        content->append(tr("Copyright 2017 ypingcn"));
+        content->append(tr("Copyright 2017 - 2018 ypingcn"));
 
 
         helpLayout->addWidget(avatar,0,0,1,1);

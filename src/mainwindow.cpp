@@ -307,7 +307,7 @@ void MainWindow::click_btnLogin()
     {
         hint->setText(tr("Invaild Nickname!"));
     }
-    else if(Tools::getLocalIP() == QString::null)
+    else if(Tools::getLocalIP().isNull())
     {
         hint->setText(tr("Check your Network to login"));
     }
@@ -326,7 +326,7 @@ void MainWindow::click_btnLogin()
 
 void MainWindow::click_btnLogout()
 {
-    if(Tools::getLocalIP() == QString::null)
+    if(Tools::getLocalIP().isNull())
     {
         hint->setText(tr("Check your Network to logout"));
     }

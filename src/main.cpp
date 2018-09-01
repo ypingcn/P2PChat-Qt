@@ -1,12 +1,20 @@
 #include "mainwindow.h"
+// For DTK 
+// #include <DApplication>
+// Other 
 #include <QApplication>
 #include <QTranslator>
 #include <QSettings>
 #include <QDesktopWidget>
 #include <QPropertyAnimation>
 
+
 int main(int argc, char *argv[])
 {
+    // For DTK
+    // DApplication::loadDXcbPlugin();
+    // DApplication a(argc, argv);
+    // Other
     QApplication a(argc, argv);
 
     QSettings settings("ypingcn","p2pchat-qt");

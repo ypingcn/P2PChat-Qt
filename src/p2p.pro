@@ -16,6 +16,11 @@ CONFIG+=c++11
 DEPENDPATH += .
 INCLUDEPATH += .
 
+# For DTK
+# ---------
+# CONFIG += link_pkgconfig
+# PKGCONFIG += dtkwidget
+
 RC_FILE += resources/icons/main.rc
 TRANSLATIONS += translations/eng.ts translations/zh-cn.ts translations/zh-tw.ts
 # The following define makes your compiler emit warnings if you use

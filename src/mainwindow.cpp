@@ -8,6 +8,7 @@
 #include <QDesktopServices>
 #include <QPropertyAnimation>
 #include <QRegularExpression>
+#include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -50,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->edtFinalIP->setText(DEFAULT_FILE_IP);
     ui->edtFinalPort->setText(QString::number(DEFAULT_FILE_PORT));
     ui->ProgressBar->hide();
+    ui->edtMessage->installEventFilter(this); // 设置发送消息的快捷键
 
     setLocalUserEnable(false);
     setWidgetState(Initial);
@@ -293,6 +295,41 @@ void MainWindow::setWidgetState(WidgetState state)
         ui->btnSendMessage->hide();
         ui->btnClearHistory->hide();
     }
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *e)
+{
+    Q_ASSERT(obj == ui->edtMessage);
+
+    QSettings settings("ypingcn","p2pchat-qt");
+    QString shortcut = settings.value("p2pchat-qt-send-message-shortcut").toString();
+
+    bool ctrlenter = false;
+    bool shiftenter = false;
+
+    if(e->type() == QEvent::KeyPress)
+    {
+        QKeyEvent * event = static_cast<QKeyEvent*>(e);
+        if(event->key() == Qt::Key_Return && (event->modifiers() & Qt::ControlModifier))
+        {
+            ctrlenter = true;
+        }
+        else if(event->key() == Qt::Key_Return && (event->modifiers() & Qt::ShiftModifier))
+        {
+            shiftenter = true;
+        }
+    }
+    if(ctrlenter && shortcut == "ctrlenter")
+    {
+        click_btnSendMessage();
+        return true;
+    }
+    else if(shiftenter && shortcut == "shiftenter")
+    {
+        click_btnSendMessage();
+        return true;
+    }
+    return false;
 }
 
 void MainWindow::click_btnSendMessage()

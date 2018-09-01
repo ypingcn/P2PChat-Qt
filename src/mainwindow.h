@@ -26,6 +26,9 @@ public:
     fileWorker * file;
     chatWorker * chat;
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *e); // 定义发送快捷键用
+
 private:
     Ui::MainWindow *ui;
     hintWidget * hint;

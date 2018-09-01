@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 
     if(!settings.contains("p2pchat-qt-lang"))
         settings.setValue("p2pchat-qt-lang","zh-cn");
+    if(!settings.contains("p2pchat-qt-send-message-shortcut"))
+        settings.setValue("p2pchat-qt-send-message-shortcut","ctrlenter");
 
     QTranslator Translator; // 加载翻译文件
     if(QSysInfo::kernelType() == "linux")

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 // For DTK 
 // #include <DApplication>
+// DWIDGET_USE_NAMESPACE
 // Other 
 #include <QApplication>
 #include <QTranslator>

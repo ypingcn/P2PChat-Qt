@@ -44,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(ui->listOnlineUser,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(updateFinalIP(QListWidgetItem*)));
+    connect(ui->edtName,SIGNAL(returnPressed()),this,SLOT(click_btnLogin()));
 
     ui->labIPAdress->setText(Tools::getLocalIP());
     ui->edtFinalIP->setText(DEFAULT_FILE_IP);

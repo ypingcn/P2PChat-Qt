@@ -38,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnSendFile,SIGNAL(clicked(bool)),this,SLOT(click_btnSendFile()));
     connect(ui->btnChooseFile,SIGNAL(clicked(bool)),this,SLOT(click_btnChooseFile()));
     connect(ui->btnSendMessage,SIGNAL(clicked()),this,SLOT(click_btnSendMessage()));
+    connect(ui->btnClearHistory,&QPushButton::clicked,[this](){
+        ui->browserMessage->clear();
+        hint->setText(tr("Message clear!"));
+    });
 
     connect(ui->listOnlineUser,SIGNAL(itemDoubleClicked(QListWidgetItem*)),this,SLOT(updateFinalIP(QListWidgetItem*)));
 
@@ -233,6 +237,7 @@ void MainWindow::setLocalUserEnable(bool status)
     ui->edtName->setEnabled(!status);
     ui->edtMessage->setEnabled(status);
     ui->btnSendMessage->setEnabled(status);
+    ui->btnClearHistory->setEnabled(status);
     ui->btnLogin->setEnabled(!status);
     ui->btnLogout->setEnabled(status);
     ui->boxMask->setEnabled(!status);
@@ -265,6 +270,7 @@ void MainWindow::setWidgetState(WidgetState state)
         ui->btnSendFile->show();
         ui->edtMessage->show();
         ui->btnSendMessage->show();
+        ui->btnClearHistory->show();
     }
     else if(state == Remove || state == Initial)
     {
@@ -284,6 +290,7 @@ void MainWindow::setWidgetState(WidgetState state)
         ui->btnSendFile->hide();
         ui->edtMessage->hide();
         ui->btnSendMessage->hide();
+        ui->btnClearHistory->hide();
     }
 }
 
